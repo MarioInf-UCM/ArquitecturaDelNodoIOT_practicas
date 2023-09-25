@@ -1,0 +1,1 @@
+# ArquitecturaDelNodoIOT_practicas
