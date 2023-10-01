@@ -4,6 +4,9 @@
 			"path": "basic"
 		},
 		{
+			"path": "si7021"
+		},
+		{
 			"path": "timer"
 		},
 		{
