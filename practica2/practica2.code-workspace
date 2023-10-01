@@ -4,6 +4,9 @@
 			"path": "basic"
 		},
 		{
+			"path": "timer"
+		},
+		{
 			"path": ".."
 		}
 	],
