@@ -1,4 +1,7 @@
 # Aplicación Consola
+
+## Cuestión 1
+
 >Cuestión
 >
 >¿Qué componente se está incluyendo además de los que siempre se incluyen por defecto?
@@ -46,6 +49,8 @@ En el salida observamos como hay tres componentes denominados **cmd_nvs**, **cmd
 
 De este modo podemos llegar a la conclusión de que el proyecto esta importando los tes componentes externos indicados.
 
+
+## Cuestión 2
 
 >Cuestión
 >
@@ -110,12 +115,24 @@ void register_nvs(void);
 #endif
 ```
 
+## Cuestión 3
+
 >Cuestión
 >
 >¿Qué particiones se crean al volcar el proyecto en nuestro dispositivo?
 
+Cuando ejecutamos el ejemplo **basic** podemos ver como dentro de este se crea un fichero con ifnromación sobre las diferentes particiones de memoria que se han generado dentro de nuestra placa **STM32**.
 
+En la siguiente tabla podemos ver el contenido de dicho fichero, donde de especifican un totral de cuatro particiones, entre las cuales podemos diferenciar el registro nvs, mencionado en la cuestión anterior y generado mediante el componente **cmd_nvs**.
 
+```BASH
+# Name,   Type, SubType, Offset,  Size, Flags
+# Note: if you have increased the bootloader size, make sure to update the offsets to avoid overlap
+nvs,      data, nvs,     0x9000,  0x6000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory, 0x10000, 1M,
+storage,  data, fat,     ,        1M,
+```
 
 
 
