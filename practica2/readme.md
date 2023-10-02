@@ -1,23 +1,140 @@
-# APLICACIÓN CONSOLA
+# Aplicación Consola
+
+## Cuestión 1
+
+>Cuestión
+>
+>¿Qué componente se está incluyendo además de los que siempre se incluyen por defecto?
+
+Los componentes osn aquellas unidades básicas que compoenne los proyectos de **Espressif**, y estos deben contener todos un fichero **CMakeList.txt**. Cuando creamos un proyecto desde cero, el mismo ya contiene su propio fichero **CMakeList.txt**, el cual es utilizado apra establecer alguans configuraciones relacionadas con al compilación y ejecución.
+
+Si analizamos el fichero **CMakelists.txt** que esta contenido en el directorio raíz del ejemplo **basic**, podremos ver el siguiente contenido:
+
+```C
+cmake_minimum_required(VERSION 3.16)
+
+set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/system/console/advanced/components)
+
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(console)
 ```
-Cuestión
 
-¿Qué componente se está incluyendo además de los que siempre se incluyen por defecto?
+En la segunda línea del fichero se está introduciendo una dirección local donde se encuentran unos componentes a importar. Debemos de tener en cuenta que la dirección de los componetes que debe importar el proyecto viene dada por dos variables:
+ - **COMPONENT_DIRS:** Variable que referencia los directorios en los cuales el proyecto buscará los compoenntes predeterminados.
+ - **EXTRA_COMPONENT_DIRS:** Variable en la cual podremos incluir directorios adicionales donde el proyecto debe buscar componentes a la hora de compolar el proyecto.
+
+Si en el caso de observar la dirección especificada, podremos ver el siguiente resultado:
+
+```BASH
+debian12:~/esp/esp-idf/examples/system/console/advanced/components$ ls -l
+total 12
+drwxr-xr-x 2 mario mario 4096 sep 18 12:24 cmd_nvs
+drwxr-xr-x 2 mario mario 4096 sep 18 12:24 cmd_system
+drwxr-xr-x 2 mario mario 4096 sep 18 12:24 cmd_wifi
+debian12:~/esp/esp-idf/examples/system/console/advanced/components$ ls cmd_nvs/
+CMakeLists.txt  cmd_nvs.c  cmd_nvs.h
+debian12:~/esp/esp-idf/examples/system/console/advanced/components$ ls cmd_system/
+CMakeLists.txt  cmd_system.c  cmd_system_common.c  cmd_system.h  cmd_system_sleep.c
+debian12:~/esp/esp-idf/examples/system/console/advanced/components$ ls cmd_wifi/
+CMakeLists.txt  cmd_wifi.c  cmd_wifi.h
 ```
 
+En el salida observamos como hay tres componentes denominados **cmd_nvs**, **cmd_system** y **cmd_wifi**, cada uno de los cuales contiene su propio fichero **CMakeLists.tst**. Además de esto, podemos ver como en el inicio de la aplciación se encuentran importados dichos componentes:
+
+```C
+#include "cmd_system.h"
+#include "cmd_wifi.h"
+#include "cmd_nvs.h"
 ```
-Cuestión
 
-¿Qué funcionalidad se importa de dicho componente?
+De este modo podemos llegar a la conclusión de que el proyecto esta importando los tes componentes externos indicados.
 
+
+## Cuestión 2
+
+>Cuestión
+>
+>¿Qué funcionalidad se importa de dicho componente?
+
+Todos los componentes contienen funciones para llevar a a cabo la interacción con el intérprete en linea de comandos, sin emabrgo, cada uno de ellos desarrolla una funcionalidad en concreto. Para responder esta pregunta analizaremos los ficheros de cabecera de cada uno de los componentes:
+
+- **cmd_system:** Se trata del principal de los tres compoenents importados y nos proporciona soporte para las funciones elementales desarrolladas por el interprete en linea de comandos. El siguiente cuadro contiene las definiciones del fichero de cabecera:
+
+```C
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Register all system functions
+void register_system(void);
+
+// Register common system functions: "version", "restart", "free", "heap", "tasks"
+void register_system_common(void);
+
+// Register deep and light sleep functions
+void register_system_sleep(void);
+
+#ifdef __cplusplus
+}
+#endif
+```
+
+ - **cmd_wifi:** Contiene funciones de configruación y pasos básicos para poder iniciar el driver WIFI en modo Estación y conectarse a una red existente. El siguiente cuadro contiene las definiciones del fichero de cabecera:
+
+```C
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Register WiFi functions
+void register_wifi(void);
+
+#ifdef __cplusplus
+}
+#endif
+```
+
+ - **cmd_nvs:** Nos permite iniciar el registro de memoria no volatil utilziado para operar con el interprete. El siguiente cuadro contiene las definiciones del fichero de cabecera:
+
+```C
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Register NVS functions
+void register_nvs(void);
+
+#ifdef __cplusplus
+}
+#endif
+```
+
+## Cuestión 3
+
+>Cuestión
+>
+>¿Qué particiones se crean al volcar el proyecto en nuestro dispositivo?
+
+Cuando ejecutamos el ejemplo **basic** podemos ver como dentro de este se crea un fichero con ifnromación sobre las diferentes particiones de memoria que se han generado dentro de nuestra placa **STM32**.
+
+En la siguiente tabla podemos ver el contenido de dicho fichero, donde de especifican un totral de cuatro particiones, entre las cuales podemos diferenciar el registro nvs, mencionado en la cuestión anterior y generado mediante el componente **cmd_nvs**.
+
+```BASH
+# Name,   Type, SubType, Offset,  Size, Flags
+# Note: if you have increased the bootloader size, make sure to update the offsets to avoid overlap
+nvs,      data, nvs,     0x9000,  0x6000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory, 0x10000, 1M,
+storage,  data, fat,     ,        1M,
 ```
 
 
-```
-Cuestión
-
-¿Qué particiones se crean al volcar el proyecto en nuestro dispositivo?
-```
 
 # Importar código externo como componente (SI7021)
 En el proyecto si7021 se ha creado la carpeta components/si7021 junto a los ficheros [si7021.c](si70121/components/si70121/si7021.c) y [si7021.h](si70121/components/si70121/si7021.h). También se ha creado el fichero [CMakeLists.txt](si70121/components/si70121/CMakeLists.txt) con el siguiente contenido:
