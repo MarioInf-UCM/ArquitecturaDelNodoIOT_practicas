@@ -1,23 +1,24 @@
-# APLICACIÓN CONSOLA
-```
-Cuestión
-
-¿Qué componente se está incluyendo además de los que siempre se incluyen por defecto?
-```
-
-```
-Cuestión
-
-¿Qué funcionalidad se importa de dicho componente?
-
-```
+# Aplicación Consola
+>Cuestión
+>
+>¿Qué componente se está incluyendo además de los que siempre se incluyen por defecto?
 
 
-```
-Cuestión
 
-¿Qué particiones se crean al volcar el proyecto en nuestro dispositivo?
-```
+>Cuestión
+>
+>¿Qué funcionalidad se importa de dicho componente?
+
+
+
+>Cuestión
+>
+>¿Qué particiones se crean al volcar el proyecto en nuestro dispositivo?
+
+
+
+
+
 
 # Importar código externo como componente (SI7021)
 En el proyecto si7021 se ha creado la carpeta components/si7021 junto a los ficheros [si7021.c](si70121/components/si70121/si7021.c) y [si7021.h](si70121/components/si70121/si7021.h). También se ha creado el fichero [CMakeLists.txt](si70121/components/si70121/CMakeLists.txt) con el siguiente contenido:
