@@ -6,7 +6,7 @@
 >
 >¿Qué componente se está incluyendo además de los que siempre se incluyen por defecto?
 
-Los componentes osn aquellas unidades básicas que compoenne los proyectos de **Espressif**, y estos deben contener todos un fichero **CMakeList.txt**. Cuando creamos un proyecto desde cero, el mismo ya contiene su propio fichero **CMakeList.txt**, el cual es utilizado apra establecer alguans configuraciones relacionadas con al compilación y ejecución.
+Los componentes son aquellas unidades básicas que componentes los proyectos de **Espressif**, y estos deben contener todos un fichero **CMakeList.txt**. Cuando creamos un proyecto desde cero, el mismo ya contiene su propio fichero **CMakeList.txt**, el cual es utilizado apra establecer alguans configuraciones relacionadas con al compilación y ejecución.
 
 Si analizamos el fichero **CMakelists.txt** que esta contenido en el directorio raíz del ejemplo **basic**, podremos ver el siguiente contenido:
 
@@ -21,7 +21,7 @@ project(console)
 
 En la segunda línea del fichero se está introduciendo una dirección local donde se encuentran unos componentes a importar. Debemos de tener en cuenta que la dirección de los componetes que debe importar el proyecto viene dada por dos variables:
  - **COMPONENT_DIRS:** Variable que referencia los directorios en los cuales el proyecto buscará los compoenntes predeterminados.
- - **EXTRA_COMPONENT_DIRS:** Variable en la cual podremos incluir directorios adicionales donde el proyecto debe buscar componentes a la hora de compolar el proyecto.
+ - **EXTRA_COMPONENT_DIRS:** Variable en la cual podremos incluir directorios adicionales donde el proyecto debe buscar componentes a la hora de compilar el proyecto.
 
 Si en el caso de observar la dirección especificada, podremos ver el siguiente resultado:
 
@@ -58,7 +58,7 @@ De este modo podemos llegar a la conclusión de que el proyecto esta importando 
 
 Todos los componentes contienen funciones para llevar a a cabo la interacción con el intérprete en linea de comandos, sin emabrgo, cada uno de ellos desarrolla una funcionalidad en concreto. Para responder esta pregunta analizaremos los ficheros de cabecera de cada uno de los componentes:
 
-- **cmd_system:** Se trata del principal de los tres compoenents importados y nos proporciona soporte para las funciones elementales desarrolladas por el interprete en linea de comandos. El siguiente cuadro contiene las definiciones del fichero de cabecera:
+- **cmd_system:** Se trata del principal de los tres componentes importados y nos proporciona soporte para las funciones elementales desarrolladas por el interprete en linea de comandos. El siguiente cuadro contiene las definiciones del fichero de cabecera:
 
 ```C
 #pragma once
@@ -98,7 +98,7 @@ void register_wifi(void);
 #endif
 ```
 
- - **cmd_nvs:** Nos permite iniciar el registro de memoria no volatil utilziado para operar con el interprete. El siguiente cuadro contiene las definiciones del fichero de cabecera:
+ - **cmd_nvs:** Nos permite iniciar el registro de memoria no volatil utilizado para operar con el interprete. El siguiente cuadro contiene las definiciones del fichero de cabecera:
 
 ```C
 #pragma once
@@ -121,7 +121,7 @@ void register_nvs(void);
 >
 >¿Qué particiones se crean al volcar el proyecto en nuestro dispositivo?
 
-Cuando ejecutamos el ejemplo **basic** podemos ver como dentro de este se crea un fichero con ifnromación sobre las diferentes particiones de memoria que se han generado dentro de nuestra placa **STM32**.
+Cuando ejecutamos el ejemplo **basic** podemos ver como dentro de este se crea un fichero con información sobre las diferentes particiones de memoria que se han generado dentro de nuestra placa **STM32**.
 
 En la siguiente tabla podemos ver el contenido de dicho fichero, donde de especifican un totral de cuatro particiones, entre las cuales podemos diferenciar el registro nvs, mencionado en la cuestión anterior y generado mediante el componente **cmd_nvs**.
 
@@ -134,9 +134,26 @@ factory,  app,  factory, 0x10000, 1M,
 storage,  data, fat,     ,        1M,
 ```
 
-
-
 # Importar código externo como componente (SI7021)
+> `Tarea`
+>
+> El sensor Si7021 incorpora un sensor de tempertarua y de humedad con una interfaz I2C que facilita su uso. En el maletín disponemos de una placa de Adafruit que incorpora dicho sensor. A partir del código disponible en este repositorio de GitHub (https://github.com/jessebraham/esp-si7021), crea un componente llamado si7021 para poder utilizar el sensor sin necesidad de consultar el datasheet.
+>
+> Copia los ficheros i2c_config.c y i2c_config.h proporcionados en el Campus Virtual en la carpeta main.c de tu proyecto.
+> Modifica los ficheros CMakeLists.txt necesarios para la compilación del proyecto.
+> Conecta los pines del sensor Si7021
+>
+> - SDA -> GPIO 26
+> - SCL -> GPIO 27
+> - GND -> GND
+> - VIN -> 5V
+>
+> En el fichero principal (aquel que contenga la función app_main), incluye una llamada a i2c_master_init(). Posteriormente, utiliza el componente para leer la temperatura.
+>
+> En las fuentes descargadas, posiblemente tengas que cambiar las referencias a portTICK_RATE_MS por la más reciente portTICK_PERIOD_MS.
+>
+> IMPORTANTE: recuerda incluir la línea REQUIRES driver en el fichero CMakeLists.txt del componente. Imita el código de la práctica 1 para incluir un bucle infinito que lea la temperatura y la muestre por pantalla cada 2 segundos. Puedes usar la macro I2C_MASTER_NUM como port number en las llamadas a readTemperature().
+
 En el proyecto si7021 se ha creado la carpeta components/si7021 junto a los ficheros [si7021.c](si70121/components/si70121/si7021.c) y [si7021.h](si70121/components/si70121/si7021.h). También se ha creado el fichero [CMakeLists.txt](si70121/components/si70121/CMakeLists.txt) con el siguiente contenido:
 ```BASH
 idf_component_register(SRCS "si7021.c"
@@ -159,4 +176,67 @@ I (341) main_task: Returned from app_main()
 Temperatura 24.235947
 Temperatura 24.235947
 Temperatura 24.268122
+```
+
+# Encendido de LEDs con GPIO y timer
+> `Tarea`
+>
+> Configura un GPIO como salida y conéctalo a un LED del entrenador del laboratorio. Programa un timer para cambiar el estado del LED cada segundo. Recuerda usar una tierra común.
+
+En este caso, se toma como referencia el proyecto de blink y los ejemplos del campus referentes al timer.
+
+
+## Timer
+Definimos una estructura de tipo `esp_timer_create_args_t` en la que asociamos el callback a la dirección de la función `periodic_timer_callback`.
+
+```C
+const esp_timer_create_args_t periodic_timer_args = {
+        .callback = &periodic_timer_callback,
+        .name = "periodic"};
+```
+
+Se crea el timer usando la siguiente instrucción.
+
+```C
+esp_timer_create(&periodic_timer_args, &periodic_timer);
+```
+
+Seguidamente se inicia con un valor de 1 segundo como periodo.
+```C
+esp_timer_start_periodic(periodic_timer, 1000000);
+```
+
+## GPIO
+Definimos del fichero `Kconfig.projbuild` definimos el parámetro `LED_GPIO` para indicar el puerto a configurar como salida, por defecto 14.
+
+En el código se define la función `configure_led` donde establecemos el puerto como salida:
+
+```c
+static void configure_led(void)
+{
+    ESP_LOGI(TAG, "Configure to blink GPIO LED!");
+    gpio_reset_pin(BLINK_GPIO);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
+}
+```
+
+Se controla el estado del led a través de la variable estática s_led_state.
+Dentro de la función de callback del timer llamamos a la función `blink_led()` y cambiamos su estado.
+
+```c
+static void blink_led(void)
+{
+    /* Set the GPIO level according to the state (LOW or HIGH)*/
+    gpio_set_level(BLINK_GPIO, s_led_state);
+}
+
+...
+
+ESP_LOGI(TAG, "Cambiando el estado del LED a %s!", s_led_state == true ? "ENCENDIDO" : "APAGADO");
+blink_led();
+
+/* Cambiamos el estado del led */
+s_led_state = !s_led_state;
+
 ```
