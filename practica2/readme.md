@@ -51,7 +51,64 @@ De este modo podemos llegar a la conclusión de que el proyecto esta importando 
 >
 >¿Qué funcionalidad se importa de dicho componente?
 
+Todos los componentes contienen funciones para llevar a a cabo la interacción con el intérprete en linea de comandos, sin emabrgo, cada uno de ellos desarrolla una funcionalidad en concreto. Para responder esta pregunta analizaremos los ficheros de cabecera de cada uno de los componentes:
 
+- **cmd_system:** Se trata del principal de los tres compoenents importados y nos proporciona soporte para las funciones elementales desarrolladas por el interprete en linea de comandos. El siguiente cuadro contiene las definiciones del fichero de cabecera:
+
+```C
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Register all system functions
+void register_system(void);
+
+// Register common system functions: "version", "restart", "free", "heap", "tasks"
+void register_system_common(void);
+
+// Register deep and light sleep functions
+void register_system_sleep(void);
+
+#ifdef __cplusplus
+}
+#endif
+```
+
+ - **cmd_wifi:** Contiene funciones de configruación y pasos básicos para poder iniciar el driver WIFI en modo Estación y conectarse a una red existente. El siguiente cuadro contiene las definiciones del fichero de cabecera:
+
+```C
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Register WiFi functions
+void register_wifi(void);
+
+#ifdef __cplusplus
+}
+#endif
+```
+
+ - **cmd_nvs:** Nos permite iniciar el registro de memoria no volatil utilziado para operar con el interprete. El siguiente cuadro contiene las definiciones del fichero de cabecera:
+
+```C
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Register NVS functions
+void register_nvs(void);
+
+#ifdef __cplusplus
+}
+#endif
+```
 
 >Cuestión
 >
