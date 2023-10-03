@@ -59,4 +59,4 @@ sdkconfig.old
 
 # Ficheros .vscode
 .vscode
-*/*/.vscode/settings.json
+*/*/.vscode

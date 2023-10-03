@@ -1,0 +1,31 @@
+menu "Example Configuration"
+
+    config LED1_GPIO
+        int "LED1 GPIO number"
+        default 34
+        help
+            GPIO number (IOxx) to blink on and off the LED1.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+
+    config LED2_GPIO
+        int "LED2 GPIO number"
+        default 35
+        help
+            GPIO number (IOxx) to blink on and off the LED2.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+    
+    config LED3_GPIO
+        int "LED3 GPIO number"
+        default 32
+        help
+            GPIO number (IOxx) to blink on and off the LED3.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+
+    config LED4_GPIO
+        int "LED4 GPIO number"
+        default 33
+        help
+            GPIO number (IOxx) to blink on and off the LED4.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+
+endmenu
