@@ -1,7 +1,7 @@
 {
 	"folders": [
 		{
-			"path": "ej1_efectoHall"
+			"path": "ej1_sampling"
 		},
 		{
 			"path": "."
@@ -10,5 +10,15 @@
 			"path": ".."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"sdkconfig.h": "c",
+			"esp_log.h": "c",
+			"task.h": "c",
+			"adc.h": "c",
+			"freertos.h": "c",
+			"*.projbuild": "c",
+			"si7021.h": "c"
+		}
+	}
 }
