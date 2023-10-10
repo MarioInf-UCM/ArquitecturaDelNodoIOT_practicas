@@ -18,12 +18,12 @@ void taskFunction(void *parameters);
 void app_main(void)
 {
 
+    i2c_master_init();
     ESP_LOGI(TAG, "** Prioridad de la tarea Main: %d **", uxTaskPriorityGet(NULL));
     xTaskCreatePinnedToCore(&taskFunction, "TareaMuestreo", 3072, (void *) READ_PERIOD, TASK_PRIORITY, NULL, 0);
-
+    
     while(1){
         vTaskDelay(READ_PERIOD*1000 / portTICK_PERIOD_MS);
-        readTemperature(I2C_MASTER_NUM, &temperature);    
         ESP_LOGI(TAG, "Prioridad tarea Main: %d segundos.  Temperatura: %f", uxTaskPriorityGet(NULL), temperature);
     }
     vTaskDelete(NULL);
