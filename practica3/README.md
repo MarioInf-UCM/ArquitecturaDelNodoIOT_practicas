@@ -43,7 +43,7 @@ Ambas funciones difieren únicamente en la posibilidad de indicar el núcleo exc
  6) La función manejadora del evento de finalización de dicha tarea.
  7) Identificador del núcleo (0 o 1) que se encargará de la ejecución de la tarea (parámetro exclusivo de la función **xTaskCreatePinnedToCore()**).
 
- Una vez creada la tarea secundaria, únicamente tendremos que entarr en un bucle infinito para la lectura de la variable global encargada del almacenamiento de la temperatura.
+ Una vez creada la tarea secundaria, únicamente tendremos que entrar en un bucle infinito para la lectura de la variable global encargada del almacenamiento de la temperatura.
 
 ```C
 static const char *TAG = "ej1_sampling";
@@ -78,11 +78,52 @@ void taskFunction(void *parameters){
     vTaskDelete(NULL);
 }
 ```
+Para poder llevar a cabo la ejecución necesitaremos realizar un montaje de nuestro sistema, para lo cual utilizaremos los siguientes componentes:
+ - 1 STM32.
+ - 1 Sensor de temperatura y humedad si7021.
 
+ Por otra parte, las conexiones realizadas son las siguientes:
+ - Sensor si7021, pin SDA <-(Cable azul)-> STM32, pin GPIO 26
+ - Sensor si7021, pin SCL <-(Cable naranja)-> STM32, pin GPIO 27
+ - Sensor si7021, pin GND <-(Cable negro)-> STM32, pin GND
+ - Sensor si7021, pin VIN <-(Cable verde)-> STM32, pin 5V
+
+En la siguiente imagen podemos ver un ejemplo de montaje correspondiente a las especificaciones anteriores.
+
+<img src="images/montajeEjercicio1.jpeg" alt="drawing" style="width:50%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+Una vez realizado el montaje del sistema, podremos ejecutarlo para obtener la siguiente salida, en la que podremos ver como es la tarea secundaria la que realiza la lectura y como es la principal la que la muestra por pantalla. También podemos observas información adicional como la prioridad de dichas tareas o el tiempo de muestreo configurable por el usuario.
+
+```BASH
+I (342) main_task: Calling app_main()
+I (342) ej1_sampling: ** Prioridad de la tarea Main: 1 **
+I (442) ej1_sampling: Prioridad tarea Secundaria: 5.    Periodo de lectura 2 segundos.
+I (2342) ej1_sampling: Prioridad tarea Main: 1 segundos.  Temperatura: 37.202591
+I (2542) ej1_sampling: Prioridad tarea Secundaria: 5.    Periodo de lectura 2 segundos.
+I (4342) ej1_sampling: Prioridad tarea Main: 1 segundos.  Temperatura: 37.181141
+I (4642) ej1_sampling: Prioridad tarea Secundaria: 5.    Periodo de lectura 2 segundos.
+I (6342) ej1_sampling: Prioridad tarea Main: 1 segundos.  Temperatura: 37.159691
+```
 
 >Cuestión
 >
 >- ¿Qué prioridad tiene la tarea inicial que ejecuta la función app_main()? ¿Con qué llamada de ESP-IDF podemos conocer la prioridad de una tarea?
+
+En Espressif, cada tarea tiene asociada una prioridad específica, la cual se expresa mediante un número entero entre 1 y 23, de modo que cuanto mayor sea este, mayor prioridad tendrá dicha tarea. Por defecto, Espressif asocia a cada tarea creada una prioridad concreta dependiendo del tipo de la misma. En la siguiente imagen podemos ver un pequeño resumen sobre la prioridad asociada por defecto a las diferentes tareas según el tipo del que sean:
+
+<img src="images/InformacionPrioridadTareas.png" alt="drawing" style="width:50%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
 
 >Cuestión
 >
