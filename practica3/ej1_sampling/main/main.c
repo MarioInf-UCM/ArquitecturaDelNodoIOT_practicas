@@ -19,7 +19,6 @@ void app_main(void)
 {
 
     i2c_master_init();
-    ESP_LOGI(TAG, "** Prioridad de la tarea Main: %d **", uxTaskPriorityGet(NULL));
     xTaskCreatePinnedToCore(&taskFunction, "TareaMuestreo", 3072, (void *) READ_PERIOD, TASK_PRIORITY, NULL, 0);
     
     while(1){
