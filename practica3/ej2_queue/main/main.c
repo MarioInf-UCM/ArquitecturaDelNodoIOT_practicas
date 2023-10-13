@@ -10,7 +10,7 @@
 #define TASK_PRIORITY CONFIG_TASK_PRIORITY
 #define QUEUE_SIZE CONFIG_QUEUE_SIZE
 
-static const char *TAG = "ej2_comunication`";
+static const char *TAG = "ej2_queue`";
 
 void taskFunction(void *parameters);
 

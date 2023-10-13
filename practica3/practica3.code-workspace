@@ -4,7 +4,10 @@
 			"path": "ej1_sampling"
 		},
 		{
-			"path": "ej2_comunication"
+			"path": "ej2_queue"
+		},
+		{
+			"path": "ej3_events"
 		},
 		{
 			"path": "."
