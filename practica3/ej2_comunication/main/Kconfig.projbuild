@@ -1,0 +1,24 @@
+menu "Example Configuration"
+
+    config READ_PERIOD
+        int "Periodo de lectura"
+        range 1 60
+        default 2
+        help
+            Define el periodo de lectura, medido en segundos, con el que se obtienen datos desde el sensor Si7021.
+
+    config TASK_PRIORITY
+        int "Prioridad de la tarea encargada de realizar el muestreo"
+        range 1 22
+        default 5
+        help
+            Define la prioridad de la tarea que lleva a cabo el muestreo del sensor Si7021.
+
+    config QUEUE_SIZE
+        int "Tamaño máximo de la cola"
+        range 1 20
+        default 10
+        help
+            Define el tamaño máximo que registros que pueden almacenarse en la cola de mensajes antes de que esta se desborde.
+
+endmenu
