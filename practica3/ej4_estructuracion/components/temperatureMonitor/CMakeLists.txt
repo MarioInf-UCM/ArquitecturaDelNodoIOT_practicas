@@ -1,3 +1,3 @@
 idf_component_register(SRCS "temperatureMonitor.c"
                     INCLUDE_DIRS "."
-                    REQUIRES "driver")
+                    REQUIRES "driver" "esp_event" "esp_timer" "si7021")

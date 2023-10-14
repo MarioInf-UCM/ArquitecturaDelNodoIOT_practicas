@@ -21,10 +21,11 @@ extern "C" {
 #define TASK_ITERATIONS_COUNT        10      // number of times the task iterates
 #define TASK_PERIOD                  500     // period of the task loop in milliseconds
 
-ESP_EVENT_DECLARE_BASE(TASK_EVENTS);         // declaration of the task events family
+ESP_EVENT_DECLARE_BASE(TEMPERATURE_MONITOR_EVENTS);
 
 enum {
-    TASK_ITERATION_EVENT                     // raised during an iteration of the loop within the task
+    TEMPERATURE_READED_EVENT,                   // Lanzado tras realizar la lectura de la temperatura
+    HUMIDITY_READED_EVENT                       // Lanzado tras realizar la lectura de la humedad
 };
 
 #ifdef __cplusplus
