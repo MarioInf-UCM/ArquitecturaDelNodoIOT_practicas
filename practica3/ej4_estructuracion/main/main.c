@@ -7,15 +7,24 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <stdio.h>
+#include <inttypes.h>
+#include "sdkconfig.h"
 #include "esp_log.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_chip_info.h"
+#include "esp_flash.h"
+#include "esp_system.h"
+#include "i2c_config.h"
+#include "si7021.h"
 
 #include "../events/event_source.h"
 #include "esp_event_base.h"
 
 static const char* TAG = "ej4_estructuracion";
+
+/* 
 
 // Event loops
 esp_event_loop_handle_t loop_with_task;
@@ -33,7 +42,7 @@ static void application_task(void* args)
     }
 }
 
-/* Event source task related definitiuser_event_loopsuser_event_loopsons */
+/* Event source task related definitiuser_event_loopsuser_event_loopsons 
 ESP_EVENT_DEFINE_BASE(TASK_EVENTS);
 
 TaskHandle_t g_task;
@@ -137,3 +146,4 @@ void app_main(void)
 
 
 
+ */

@@ -13,7 +13,11 @@
 	"settings": {
 		"files.associations": {
 			"i2c.h": "c",
-			"sdkconfig.h": "c"
+			"sdkconfig.h": "c",
+			"freertos.h": "c",
+			"inttypes.h": "c",
+			"esp_err.h": "c",
+			"task.h": "c"
 		}
 	}
 }

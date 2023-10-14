@@ -7,16 +7,22 @@
 #include "sdkconfig.h"
 
 
-void monitor_init(){
-    i2c_master_init();
-    
+esp_err_t monitor_init(){
+
+    esp_err_t result = i2c_master_init();
+    return result;
 }
 
 
-float monitor_readTemperature(){
+esp_err_t monitor_readTemperature(float *outputData){
 
-    float temperature = 0.0f;
-    readTemperature(I2C_MASTER_NUM, &temperature);
-    
-    return temperature;
+    esp_err_t result = readTemperature(I2C_MASTER_NUM, &outputData);
+    return result;
+}
+
+
+esp_err_t monitor_readHumidity(float *outputData){
+
+    esp_err_t result = readHumidity(I2C_MASTER_NUM, &outputData);
+    return result;
 }

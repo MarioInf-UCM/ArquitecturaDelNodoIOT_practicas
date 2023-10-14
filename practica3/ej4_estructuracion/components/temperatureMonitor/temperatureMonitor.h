@@ -2,5 +2,8 @@
 #include "sdkconfig.h"
 
 
-void monitor_init();
-float monitor_readTemperature();
+esp_err_t monitor_init();
+
+esp_err_t monitor_readTemperature(float *outputData);
+
+esp_err_t monitor_readHumidity(float *outputData);
