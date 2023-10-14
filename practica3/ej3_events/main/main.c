@@ -3,10 +3,11 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "i2c_config.h"
-#include "esp_eve"
 
 #include "../components/si7021/si7021.h"
-#include "hall_event.h"
+#include "event_source.h"
+#include "esp_event_base.h"
+
 
 #define READ_PERIOD CONFIG_READ_PERIOD
 #define TASK_PRIORITY CONFIG_TASK_PRIORITY
@@ -17,7 +18,7 @@ void event_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEve
 static const char *TAG = "ej3_events";
 static float temperature = 0;
 esp_event_loop_handle_t eventLoop;
-    ESP_EVENT_DEFINE_BASE(HALL_EVENT);
+ESP_EVENT_DEFINE_BASE(HALL_EVENT);
 
 
 
