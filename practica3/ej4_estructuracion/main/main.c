@@ -1,12 +1,3 @@
-/* esp_event (event loop library) basic example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
 #include <stdio.h>
 #include <inttypes.h>
 #include "sdkconfig.h"
@@ -23,8 +14,9 @@
 #include "../events/temperature_monitor_events.h"
 #include "esp_event_base.h"
 
-static void temperatureReaded_handled(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs);
+#define READ_PERIOD CONFIG_READ_PERIOD
 
+static void temperatureReaded_handled(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs);
 static const char* TAG = "ej4_estructuracion";
 esp_event_loop_handle_t eventLoop_temperatureMonitor;
 ESP_EVENT_DEFINE_BASE(TEMPERATURE_MONITOR_EVENTS);
@@ -48,9 +40,9 @@ void app_main(){
     while (1)
     {
         TemperatureMonitor_readTemperature();
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(READ_PERIOD*1000 / portTICK_PERIOD_MS);
         TemperatureMonitor_readHumidity();
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(READ_PERIOD*1000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
