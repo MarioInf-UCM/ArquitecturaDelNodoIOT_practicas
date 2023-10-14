@@ -4,11 +4,16 @@
 			"path": "ej4_estructuracion"
 		},
 		{
-			"path": "ejerciciofinal"
+			"path": "."
 		},
 		{
 			"path": ".."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"i2c.h": "c",
+			"sdkconfig.h": "c"
+		}
+	}
 }

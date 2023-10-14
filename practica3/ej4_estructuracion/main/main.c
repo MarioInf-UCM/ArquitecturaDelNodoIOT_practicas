@@ -15,7 +15,7 @@
 #include "../events/event_source.h"
 #include "esp_event_base.h"
 
-static const char* TAG = "user_event_loops";
+static const char* TAG = "ej4_estructuracion";
 
 // Event loops
 esp_event_loop_handle_t loop_with_task;
@@ -33,7 +33,7 @@ static void application_task(void* args)
     }
 }
 
-/* Event source task related definitions */
+/* Event source task related definitiuser_event_loopsuser_event_loopsons */
 ESP_EVENT_DEFINE_BASE(TASK_EVENTS);
 
 TaskHandle_t g_task;
@@ -137,31 +137,3 @@ void app_main(void)
 
 
 
-
-/* 
-#define TIME_WAIT_TASK 2
-
-void taskShowTemperature();
-
-void app_main(void)
-{
-
-    i2c_master_init();
-    xTaskCreate(&taskShowTemperature, "taskShowTemperatura", 2048, NULL, 5, NULL);
-}
-
-void taskShowTemperature()
-{
-
-    while (1)
-    {
-        float temperature = 0;
-        readTemperature(I2C_MASTER_NUM, &temperature);
-
-        printf("Temperatura %f\n", temperature);
-
-        vTaskDelay(TIME_WAIT_TASK * 1000 / portTICK_PERIOD_MS);
-    }
-    vTaskDelete(NULL);
-}
- */

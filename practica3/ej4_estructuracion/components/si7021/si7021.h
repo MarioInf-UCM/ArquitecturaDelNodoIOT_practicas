@@ -17,9 +17,9 @@
 
 // ---------------------------------------------------------------------------
 // INCLUDES
-
+#include <inttypes.h>
 #include <stdint.h>
-
+#include "esp_err.h"
 #include "sdkconfig.h"
 
 
@@ -149,7 +149,8 @@ esp_err_t softwareReset(const i2c_port_t i2c_num);
 //
 // internal
 
-/**
+/**#include <stdio.h>
+
  * perform a sensor reading, and write the value in its correct units to the
  * specified location in memory.
  * 

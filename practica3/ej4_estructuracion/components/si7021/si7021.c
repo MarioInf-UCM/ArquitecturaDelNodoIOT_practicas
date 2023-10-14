@@ -12,8 +12,9 @@
  * https://www.silabs.com/documents/public/data-sheets/Si7021-A20.pdf
  * ************************************************************************ */
 
+#include <inttypes.h>
 #include "driver/i2c.h"
-
+#include "esp_err.h"
 #include "si7021.h"
 
 // ---------------------------------------------------------------------------
