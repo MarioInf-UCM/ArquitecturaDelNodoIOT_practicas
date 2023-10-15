@@ -19,7 +19,8 @@
 			"esp_err.h": "c",
 			"task.h": "c",
 			"si7021.h": "c",
-			"esp_event_base.h": "c"
+			"esp_event_base.h": "c",
+			"monitor-gpio.h": "c"
 		}
 	}
 }

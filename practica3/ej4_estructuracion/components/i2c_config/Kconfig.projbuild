@@ -1,0 +1,15 @@
+menu "I2C_CONFIG Configuration"
+
+    config I2C_MASTER_SCL_IO 
+        int "I2C_MASTER_SCL_IO PORT"
+        default 27
+        help
+            Port for I2C SCL
+
+    config I2C_MASTER_SDA_IO
+        int "I2C_MASTER_SDA_IO PORT"
+        default 26
+        help
+            Port for I2C SDA
+
+endmenu

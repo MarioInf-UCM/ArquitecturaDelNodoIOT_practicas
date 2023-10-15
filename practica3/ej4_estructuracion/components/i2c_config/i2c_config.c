@@ -4,7 +4,11 @@
 #include "sdkconfig.h"
 #include "i2c_config.h"
 
-static const char *TAG = "i2c-example";
+static const char *TAG = "I2C_CONFIG";
+
+// Input params from menuconfig
+#define I2C_MASTER_SCL_IO CONFIG_I2C_MASTER_SCL_IO
+#define I2C_MASTER_SDA_IO CONFIG_I2C_MASTER_SDA_IO
 
 /**
  * @brief test code to operate on BH1750 sensor
