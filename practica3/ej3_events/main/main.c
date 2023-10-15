@@ -16,8 +16,7 @@ void taskFunction(void *parameters);
 void event_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void* eventArgs);
 
 static const char *TAG = "ej3_events";
-static float temperature = 0;
-esp_event_loop_handle_t eventLoop;
+static esp_event_loop_handle_t eventLoop;
 ESP_EVENT_DEFINE_BASE(HALL_EVENT);
 
 
@@ -40,10 +39,6 @@ void app_main(void)
     xTaskCreatePinnedToCore(&taskFunction, "TareaMuestreo", 3072, (void *) READ_PERIOD, TASK_PRIORITY, NULL, 0);
     
     ESP_LOGI(TAG, "***Tarea Principal preparada. Prioridad: %d.***", uxTaskPriorityGet(NULL));
-    while(1){
-        vTaskDelay(READ_PERIOD*1000 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "Temperatura: %f", temperature);
-    }
     vTaskDelete(NULL);
 }
 
@@ -52,9 +47,9 @@ void app_main(void)
 void event_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs){
 
     float temperature=0.0f;
-    if(registerArgs == eventArgs){
+    if(registerArgs == eventLoop){
         temperature = *(float *)eventArgs;
-        ESP_LOGI(TAG, "Temperatura: %f", , temperature);    
+        ESP_LOGI(TAG, "Temperatura: %f", temperature);    
     }else{
         ESP_LOGI(TAG, "Evento lanzado desde el lugar equivocado."); 
     }
@@ -65,7 +60,7 @@ void event_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEve
 void taskFunction(void *parameters){
 
     int period = (int) parameters;
-    float temperature = 0.0
+    float temperature = 0.0;
     ESP_LOGI(TAG, "***Tarea Secundaria (muestradora) preparada. Prioridad: %d. Periodo: %d s.***", uxTaskPriorityGet(NULL), period);
     while(1){
         readTemperature(I2C_MASTER_NUM, &temperature);
