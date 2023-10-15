@@ -274,3 +274,155 @@ Dicho esto, podemos ver que el dato es proporcionado a la función mediante refe
     margin-botton: 1%;
 "/>
 
+## Ejercicio 3 - Uso de eventos
+
+>Tarea
+>
+>La tarea creada (muestreadora) recibirá como argumento el período de muestreo. Cuando tenga una nueva muestra, la comunicará a través de esp_event_post_to(). La tarea inicial registrará un handler que se encargará de escribir en el puerto serie.
+
+Para llevar a cabo la presente tarea, utilizaremos como base el primer ejercicio y lo completaremos implementado todo lo relacionado para la gestión de eventos, con la que llevaremos a cabo la comunicación entre procesos.
+
+El primer paso a desarrollar será la definición de los eventos que vamos a utilizar para poder notificar las lecturas de temperatura llevadas a cabo por al tarea muestreadora. Para esto necesitaremos crear el nuevo fichero **main/event_source** y especificar dentro del mismo tanto la familia de eventos que vamos a crear como cada uno de los ID que definirán todos los posibles eventos que utilizaremos.
+
+En el siguiente cuadro podemos ver el contenido de dicho fichero, donde se puede ver que la familia creada se denominará **HALL_EVENT** y únicamente se especifica un único ID (**HALL_EVENT_NEWSAMPLE**), el cual será lanzado cuando se produzca una nueva lectura de temperatura.
+
+```C
+#ifndef EVENT_SOURCE_H_
+#define EVENT_SOURCE_H_
+
+#include "esp_event.h"
+#include "esp_timer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Declarations for the event source
+#define TASK_ITERATIONS_COUNT        10      // number of times the task iterates
+#define TASK_PERIOD                  500     // period of the task loop in milliseconds
+
+ESP_EVENT_DECLARE_BASE(HALL_EVENT);         // declaration of the task events family
+
+
+enum {
+    HALL_EVENT_NEWSAMPLE                     // raised during an iteration of the loop within the task
+};
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // #ifndef EVENT_SOURCE_H_
+```
+
+Antes de seguir con desarrollo, para poder habilitar el uso de eventos necesitaremos especificar en el fichero **CMakeLists.tst** de aquél componente que los utilice, el uso tanto del componente **esp_event** como de **esp_timer**. En el siguiente cuadro podemos ver el contenido de dicho fichero:
+
+```C
+idf_component_register( SRCS "i2c_config.c" "main.c"
+                        INCLUDE_DIRS "."
+                        REQUIRES "driver" "esp_event" "esp_timer")
+```
+
+Una vez hecho esto podemos centrarnos en el desarrollo del código principal. Lo primero que debemos hacer será incluir el nuevo fichero donde hemos definidos los eventos a utilizar y la biblioteca **esp_event_base** la cual nos proporciona acceso a las funciones básicas para el uso de eventos. Además, también deberemos definir la variable global encargada de la gestión del **eventLoop** y especificar el uso de la clase de eventos **ALL_EVENT** mediante la función **ESP_EVENT_DEFINE_BASE**.
+
+```C
+#include "event_source.h"
+#include "esp_event_base.h"
+.
+.
+.
+static const char *TAG = "ej3_events";
+static esp_event_loop_handle_t eventLoop;
+ESP_EVENT_DEFINE_BASE(HALL_EVENT);
+```
+
+Pasando a la función **app_main()**, la cual será ejecutada por la tarea principal, necesitaremos desarrollar los siguientes pasos en lo que a la gestión de eventos se refiere:
+1) Definir la estructura **esp_event_loop_args_t**, la cual especificará las características del **eventLoop** encargado de comprobar los eventos a los cuales nos vamos a suscribir.
+2) Crear el **eventLoop** en base a la variable **esp_event_loop_handle_t** definida con ámbito global y a la estructura **esp_event_loop_args_t** especificada en el paso anterior.
+3) Suscribirnos a los eventos que utilizaremos para notificar las nuevas lecturas de temperatura mediante la función **esp_event_handler_register_with()**.
+
+Una vez llevados a cabo estos pasos, únicamente necesitaremos proseguir con la creación de la tarea muestreadora de la misma manera que en los ejercicios anteriores. En el siguiente cuadro podemos ver el fragmento de código correspondiente a la función **app_main()**:
+
+```C
+void app_main(void)
+{
+
+    float temperature=0.0;
+    esp_event_loop_args_t eventLoop_args ={
+        .queue_size = 10,
+        .task_name = "eventLoop_task",
+        .task_priority = uxTaskPriorityGet(NULL),
+        .task_stack_size = 3072,
+        .task_core_id = tskNO_AFFINITY
+    };
+    esp_event_loop_create(&eventLoop_args, &eventLoop);
+    esp_event_handler_register_with(eventLoop, HALL_EVENT, HALL_EVENT_NEWSAMPLE, event_handler, eventLoop);
+
+    i2c_master_init();
+    xTaskCreatePinnedToCore(&taskFunction, "TareaMuestreo", 3072, (void *) READ_PERIOD, TASK_PRIORITY, NULL, 0);
+    
+    ESP_LOGI(TAG, "***Tarea Principal preparada. Prioridad: %d.***", uxTaskPriorityGet(NULL));
+    vTaskDelete(NULL);
+}
+```
+
+El siguiente paso se trata de la definición de la función manejadora que tratará el evento de lectura de la temperatura. Esta función define, entre sus varios parámetros de entrada, dos diferentes para el paso de información, el primero especificado desde el registro del evento (el cual nos permite saber desde que tarea se esta ejecutando la manejadora) y el segundo enviado junto al lanzamiento del evento (el cual nos permite obtener información de la tarea que ha lanzado el evento).
+
+En el siguiente cuadro podemos ver la definición de la manejadora, donde comprobamos que su ejecución este vinculada a la tarea principal mediante el uso del parámetro `registerArgs`. En caso afirmativo, imprimimos la temperatura, la cual ha sido enviada desde la tarea muestreadora al lanzar el evento en el parámetro `eventArgs` con el tipo `void *`, luego necesitaremos también realizar un casteo al tipo de dato adecuado antes de utilizarlo.
+
+```C
+void event_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs){
+
+    float temperature=0.0f;
+    if(registerArgs == eventLoop){
+        temperature = *(float *)eventArgs;
+        ESP_LOGI(TAG, "Temperatura: %f", temperature);    
+    }else{
+        ESP_LOGI(TAG, "Evento lanzado desde el lugar equivocado."); 
+    }
+}
+```
+
+Para finalizar necesitaremos especificar la función vinculada a la tarea muestreadora, cuyo contenido es muy similar al ejercicio base, con la diferencia de que debemos lanzar un evento cada vez que realizamos una lectura de la temperatura con la función **esp_event_post_to()**, dentro de la cual debemos especificar el evento a lanzar y pasar como parámetro la temperatura leída.
+
+También observamos como la tarea muestreadora recibe el periodo de muestreo desde por parámetros desde la tarea principal. En el siguiente cuadro podemos ver dicha función y los elementos indicados de la misma:
+
+```C
+void taskFunction(void *parameters){
+
+    int period = (int) parameters;
+    float temperature = 0.0;
+    ESP_LOGI(TAG, "***Tarea Secundaria (muestradora) preparada. Prioridad: %d. Periodo: %d s.***", uxTaskPriorityGet(NULL), period);
+    while(1){
+        readTemperature(I2C_MASTER_NUM, &temperature);
+        esp_event_post_to(eventLoop, HALL_EVENT, HALL_EVENT_NEWSAMPLE, &temperature, sizeof(temperature), 0);
+        vTaskDelay(period*1000 / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
+}
+```
+
+Una vez realizados todos los pasos anteriores, únicamente necesitaremos ejecutar la aplicación para comprobar los resultados. En el siguiente cuadro podemos ver la salida de la misma y como se realiza correctamente tanto la lectura de la temperatura como su impresión por pantalla.
+
+```BASH
+ (330) app_start: Starting scheduler on CPU0
+I (335) app_start: Starting scheduler on CPU1
+I (335) main_task: Started on CPU0
+I (345) main_task: Calling app_main()
+I (345) ej3_events: ***Tarea Secundaria (muestradora) preparada. Prioridad: 5. Periodo: 2 s.***
+I (355) ej3_events: ***Tarea Principal preparada. Prioridad: 1.***
+I (455) ej3_events: Temperatura: 26.177191
+I (2555) ej3_events: Temperatura: 26.187916
+I (4655) ej3_events: Temperatura: 26.166466
+I (6755) ej3_events: Temperatura: 26.187916
+```
+
+>Cuestión
+>
+>¿Qué debe hacer la tarea inicial tras registrar el handle? ¿Puede finalizar?
+
+Tras la creación del **eventLoop** y registro de la función manejadora que atenderá al evento que lanzaremos al leer la temperatura, la tarea encargada principal deberá crear a la tarea muestreadora y asignar su ejecución a la función que define su comportamiento, siendo en nuestro caso **taskFunction()**. Una vez hecho esto, la función principal puede terminar sin problemas, pues aún quedan varias tareas ejecutándose que gobiernan el uso de la aplicación, siendo en este caso dos:
+- La tarea muestreadora que lee la temperatura y lanza el evento definido para ello.
+- La tarea asociada al **eventLoop**, la cual esta comprobando continuamente el lanzamiento de eventos y crea las diferentes tareas que ejecutaran las funciones manejadoras asociadas a dichos eventos.
+
+Es importante tener en cuenta que si finalizamos la tarea principal sin que se hubieran creado ninguna otra que gobierne la aplicación, el sistema detectaría esto y tendríamos un error que reiniciaría la ejecución constantemente. En nuestro caso, haber creado concretamente la tarea muestreadora evita esto.
