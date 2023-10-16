@@ -1,0 +1,33 @@
+{
+	"folders": [
+		{
+			"path": "ej1_sampling"
+		},
+		{
+			"path": "ej2_queue"
+		},
+		{
+			"path": "ej3_events"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"sdkconfig.h": "c",
+			"esp_log.h": "c",
+			"task.h": "c",
+			"adc.h": "c",
+			"freertos.h": "c",
+			"*.projbuild": "c",
+			"si7021.h": "c",
+			"esp_event.h": "c",
+			"esp_event_base.h": "c",
+			"esp_timer.h": "c"
+		}
+	}
+}
