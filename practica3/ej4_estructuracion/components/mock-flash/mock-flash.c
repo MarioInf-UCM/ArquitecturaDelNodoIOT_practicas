@@ -62,14 +62,14 @@ void *readFromFlash(size_t size)
     if (size > getDataLeft())
     {
         ESP_LOGI(TAG, "No hay suficientes datos para leer.");
-        return NULL;
+        return ESP_ERR_INVALID_SIZE;
     }
 
     void *data = malloc(size);
     if (!data)
     {
         ESP_LOGI(TAG, "No se pudo asignar memoria para el dato.");
-        return NULL;
+        return ESP_ERR_INVALID_SIZE;
     }
 
     size_t bytesToEnd = buffer.capacity - buffer.tail;

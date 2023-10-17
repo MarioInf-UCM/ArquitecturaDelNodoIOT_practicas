@@ -3,6 +3,8 @@
 El presente componente gestiona la interacción del usuario con los diferentes pines GPIO que están involucrados en la aplicación.
 
 
+<br /> 
+
 ## Variables de configuración
 
  - **NBUTTON:** Define la frecuencia con la que se escanea el estado de los pines GPIO.

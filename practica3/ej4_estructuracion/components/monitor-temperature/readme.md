@@ -3,6 +3,8 @@
 El componente **TemperatureMonitor** implementa la funcionalidad necesaria para realizar lecturas de temperatura y humedad, empleando para ello el sensor **Si7021**. 
 
 
+<br /> 
+
 ## Variables de configuración
 
  - **READ_PERIOD:** Define la frecuencia con la que se escanea el estado de los pines GPIO.

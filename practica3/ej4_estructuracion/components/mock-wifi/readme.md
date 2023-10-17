@@ -1,7 +1,9 @@
 # Componente mockWIFI - Guía de uso
 
-El presente componente simula el comportamiento de una una conexión a la red WIFI como Punto de Acceso. 
+El presente componente simula el comportamiento de una conexión a la red WIFI como Punto de Acceso. 
 
+
+<br /> 
 
 ## Variables de configuración
 
