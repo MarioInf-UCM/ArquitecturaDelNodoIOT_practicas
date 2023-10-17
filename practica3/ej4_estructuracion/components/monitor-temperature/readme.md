@@ -2,11 +2,27 @@
 
 El componente **TemperatureMonitor** implementa la funcionalidad necesaria para realizar lecturas de temperatura y humedad, empleando para ello el sensor **Si7021**. 
 
+
+## Variables de configuración
+
+ - **READ_PERIOD:** Define la frecuencia con la que se escanea el estado de los pines GPIO.
+    - **Referencia:** Read period for temperature and humidity (s).
+    - **Valor por defecto:** 2.
+    - **Límites del valor:** 1 - 60.
+    - **Campo de ayuda:** Define el periodo de lectura, medido en segundos, con el que se obtienen datos desde el sensor Si7021.
+    
+<br />
+
+
+
 ## Eventos implementados
 
 - **TEMPERATURE_MONITOR_EVENTS:** Familia de eventos relacionados con las lecturas de temperatura y humedad:
     - **TEMPERATURE_READED_EVENT:** Evento lanzado tras realizar una la lectura de la temperatura.
     - **HUMIDITY_READED_EVENT:** Evento lanzado tras realizar una la lectura de la humedad.
+
+
+<br />
 
 ## Funciones implementadas
 
