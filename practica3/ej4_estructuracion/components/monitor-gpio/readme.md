@@ -49,6 +49,21 @@ Inicializa el componente para poder llevar a cabo la interacción con los pines 
 <br />
 
 ```C
+esp_err_t monitor_gpio_resume();
+```
+Comienza la detección periódica de la interacción con los pines GPIO.
+
+**Parámetros:** Ninguno.
+
+**Retorno (esp_eer_t):**
+ - ESP_OK: Finalización con éxito.
+ - Posibles estados de finalización de error, consultar documentación **esp_err_t**.
+
+
+
+<br />
+
+```C
 esp_err_t monitor_gpio_stop();
 ```
 Finaliza la detección periódica de la interacción con los pines GPIO.
@@ -64,17 +79,3 @@ Finaliza la detección periódica de la interacción con los pines GPIO.
 
 <br />
 
-```C
-esp_err_t monitor_gpio_resume();
-```
-Comienza la detección periódica de la interacción con los pines GPIO.
-
-**Parámetros:** Ninguno.
-
-**Retorno (esp_eer_t):**
- - ESP_OK: Finalización con éxito.
- - Posibles estados de finalización de error, consultar documentación **esp_err_t**.
-
-
-
-<br />
