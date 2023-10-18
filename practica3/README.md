@@ -116,7 +116,7 @@ I (6342) ej1_sampling: Prioridad tarea Main: 1 segundos.  Temperatura: 37.159691
 
 En Espressif, cada tarea tiene asociada una prioridad específica, la cual se indica mediante un número entero entre 1 y 23, de modo que cuanto mayor sea este, mayor prioridad tendrá dicha tarea. Por defecto, Espressif asocia a cada tarea creada una prioridad concreta dependiendo del tipo de la misma. En la siguiente imagen podemos ver un pequeño resumen sobre la prioridad asociada por defecto a las diferentes tareas según el tipo del que sean (más información [aquí](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/performance/speed.html)):
 
-<img src="images/InformacionPrioridadTareas.png" alt="drawing" style="width:50%; 
+<img src="images/InformacionPrioridadTareas.png" alt="drawing" style="width:80%; 
     display: block;
     margin-left: auto;
     margin-right: auto;
@@ -426,3 +426,23 @@ Tras la creación del **eventLoop** y registro de la función manejadora que ate
 - La tarea asociada al **eventLoop**, la cual esta comprobando continuamente el lanzamiento de eventos y crea las diferentes tareas que ejecutaran las funciones manejadoras asociadas a dichos eventos.
 
 Es importante tener en cuenta que si finalizamos la tarea principal sin que se hubieran creado ninguna otra que gobierne la aplicación, el sistema detectaría esto y tendríamos un error que reiniciaría la ejecución constantemente. En nuestro caso, haber creado concretamente la tarea muestreadora evita esto.
+
+
+<br />
+
+# Ejercicio 4 - Estructuración de código
+
+>Tarea
+>
+>Escribe una aplicación que realice la funcionalidad anterior. Se valorará especialmente la modularidad y estructura del código, de modo que sea extensible y reutilizable.
+
+En la siguiente imagen podemos ver una descripción del funcionamiento general de la función principal que implementa el funcionamiento indicado en el enunciado. Recordar que dentro de la carpeta donde se ha definido cada componente (**components/"nombreComponente"/readme.md**) podemos encontrar la guía de uso del mismo, en la que se explican las diferentes funciones, eventos y variables de configuración que han sido definidas.
+
+<img src="images/diagrama_fsm.drawio.png" alt="drawing" style="width:100%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
