@@ -23,6 +23,58 @@ i2c_master_write_byte(cmd, (ESP_SLAVE_ADDR << 1) | I2C_MASTER_READ, ACK_EN);
 
 
 
+<br />
+
+>Cuestión
+>
+>¿Cuál es la diferencia entre 0xE3 y 0xF3? ¿Qué es clock stretching?
+
+
+Para comprender las diferencias entre los comandos 0xE3 y 0xF3 necesitamos entender que el dispositivo **si7021** realiza dos tipos diferentes de instrucciones de lectura:
+
+- La primera se realiza de forma periódica para llevar a cabo una medida relativa de la humedad y temperatura. Esta es utilizada por el comando **0xE0**, el cuál devuelve dicha medida relativa, por lo que no necesita llevar a cabo una nueva medición en el momento de ser invocado.
+
+- La segunda se lleva a cabo en el mismo instante en el que es solicitado realizar la medición, sin embargo, esta forma de medición cuenta a su vez con dos maneras de llevarse a cabo, cada una utilizada mediante un comando diferente:
+    - La medición se lleva a cabo indicando al dispositivo maestro cuando esta se ha realizado (Hold Mode). Esta se realiza mediante el comando **0xE3**.
+    - La medición se lleva a cabo sin asentimiento, indicando al dispositivo maestro que se encuentra en proceso (No Hold mode) **0xF3**.
+
+Por otra parte, cuando hablamos de **clock stretching** estamos haciendo referencia al uso del **Hold Mode** a la hora de llevar a cabo una medición.
+
+
+
+
+<br />
+
+>Cuestión
+>
+>Dichos comandos devuelven 2 bytes, que leeremos en dos variables diferentes. ¿Cómo obtenemos posteriormente nuestro número de 16 bits para calcular la temperatura?
+
+Para responder correctamente a la pregunta, necesitaremos fijarnos la sección de la documentación sobre el periférico **si7021** donde nos muestra el esquema de envío de tramas referente a la realización de una lectura de temperatura. En la siguiente imagen podemos ver dicho esquema.
+
+<img src="images/lecturaHumedad_tramas.png" alt="drawing" style="width:70%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+La primera parte de la cadena se corresponde con la conexión y el establecimiento del modo de lectura mediante la escritura en el dispositivo. Por el contrario si nos fijamos en los dos últimos mensajes enviados por el sistema esclavo, el cuál esta escrito en un color más claro, podemos ver que estos son llamados MS Byte (Most Significant) y LS Byte (Least Significant), los cuales corresponden con el bit de mayor y menor valor significativamente.
+
+Una vez hemos obtenido ambos bytes de información, únicamente necesitaremos juntarlos en una variable de 16 bits y operar para obtener la temperatura en grados mediante la siguiente fórmula:
+
+<img src="images/lecturaHumedad_formula.png" alt="drawing" style="width:70%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+
+
+<br />
+
 ## Ejercicio obligatorio - Uso de I2Ctools
 
 >Ejercicio obligatorio
