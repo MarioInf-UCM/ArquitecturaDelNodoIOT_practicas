@@ -4,6 +4,23 @@
 >
 >La dirección del sensor es 1000000 (es decir, 0x40 expresado en hexadecimal). Si queremos hacer una operación de lectura (bit R/W a 1), ¿cómo construiremos el segundo argumento de la llamada a i2c_master_write_byte() que haremos tras i2c_master_start() ?
 
+La función `i2c_master_write_byte()` únicamente puede utilizarse cuando el dispositivo se encuentra configurado en modo **master** y su función es introducir en la cola de mensajes I2C un único byte de escritura (más información [aquí](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2c.html)). La función recibe tres parámetros, los cuales son relevantes de analizar:
+ - 1) La lista de comandos I2c donde se introducirán los datos.
+ - 2) Información que se introducirá en la lista especifica en la lista de comandos I2C.
+ - 3) Flag para activar la señal ACK.
+
+Una vez visto esto, sabemos que el tercer parámetro es constante y el primero depende de la cola I2C que estemos utilizando, por lo que es más relevante es el segundo. Teniendo en cuenta que se trata de la primera escritura, necesitaremos establecer el modo de operación, de modo que el contenido de este será diferente dependiendo de si lo que queremos hacer es leer desde o escribir hacia el esclavo, pero en ambos casos, dicho byte de información estará compuesto de la siguiente manera:
+ - Los primero 7 bits harán referencia a la dirección del esclavo al cual se dirige la escritura/lectura.
+ - El último bit dependerá del tipo de operación a realizar.
+
+En el caso de Espressif, ya se encuentran definidas un par de macros para determinar si se produce una lectura o escritura, siendo estas **I2C_MASTER_READ** e **I2C_MASTER_WRITE** respectivamente. De esta manera, teniendo en cuenta que la dirección del dispositivo es de 7 bits, únicamente necesitaremos realizar un desplazamiento lateral de 1 bit sobre la variable que contiene dirección y operar mediante una puerta OR entre esta y la macro deseada.
+
+En el siguiente cuadro tenemos un ejemplo sobre como sería la ejecución de dicha función para establecer una operación de lectura sobre el esclavo.
+
+```C
+i2c_master_write_byte(cmd, (ESP_SLAVE_ADDR << 1) | I2C_MASTER_READ, ACK_EN);
+```
+
 
 
 ## Ejercicio obligatorio - Uso de I2Ctools
