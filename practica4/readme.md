@@ -101,11 +101,16 @@ Para realizar el presente ejercicio, primero necesitaremos conectar el sensor **
 **Note:** It is recommended to add external pull-up resistors for SDA/SCL pins to make the communication more stable, though the driver will enable internal pull-up resistors.
 ```
 
-Una vez ejecutado el ejemplo, podremos ver un menú de opciones que nos muestras los diferentes comandos a poder utilizar. En nuestro caso utilizaremos la instrucción `i2cdetect`, cuyo propósito es escanear el bus I2C en busca de posibles dispositivos conectados al mismo. 
-
-Una vez hecho esto, obtenemos la siguiente salida en forma de cuadro, la cual nos indica que detecta un total de dos dispositivos, uno situado en la dirección 0x00 y otro en la dirección 0x40. Este último se trata de nuestro sensor de temperatura y humedad.
+Una vez ejecutado el ejemplo, podremos ver un menú de opciones que nos muestras los diferentes comandos a poder utilizar. Lo primero será realizar una configuración del puerto I2C donde especifiquemos las conexiones que vamos a realizar mediante la instrucción `12cconfig`". En el siguiente cuadro tenemso un ejemplo de configuración para nuestro SoC STM32:
 
 ```BASH
+i2c-tools> i2cconfig --port=0 --sda=18 --scl=19 --freq=100000
+```
+
+Posteriormente utilizaremos la instrucción `i2cdetect`, cuyo propósito es escanear el bus I2C en busca de posibles dispositivos conectados al mismo. Como resultado obtenemos la siguiente salida en forma de cuadro, la cual nos indica que detecta un total de dos dispositivos, uno situado en la dirección 0x00 y otro en la dirección 0x40. Este último se trata de nuestro sensor de temperatura y humedad.
+
+```BASH
+
 i2c-tools> i2cdetect
      0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
 00: 00 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
@@ -116,4 +121,11 @@ i2c-tools> i2cdetect
 50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 70: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+```
+
+Una vez que ya conocemos la dirección del dispositivo, llevaremos a cabo una lectura del registro a utilizar mediante la instrucción `i2cget`, la cual nos devuelve el valor 0x00, puestoq ue el registro acaba de ser inicializado. En el siguiente cuadro podemos ver la salida de dicha ejecución:
+
+```BASH
+i2c-tools> i2cget -c 0x40 -r 0x00 -l 1
+0x00 
 ```
