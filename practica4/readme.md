@@ -123,9 +123,23 @@ i2c-tools> i2cdetect
 70: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 ```
 
-Una vez que ya conocemos la dirección del dispositivo, llevaremos a cabo una lectura del registro a utilizar mediante la instrucción `i2cget`, la cual nos devuelve el valor 0x00, puestoq ue el registro acaba de ser inicializado. En el siguiente cuadro podemos ver la salida de dicha ejecución:
+Una vez que ya conocemos la dirección del dispositivo, llevaremos a cabo una lectura del registro a utilizar mediante la instrucción `i2cget`, la cual nos devuelve el valor 0x00, puesto que el registro acaba de ser inicializado. En el siguiente cuadro podemos ver la salida de dicha ejecución:
 
 ```BASH
 i2c-tools> i2cget -c 0x40 -r 0x00 -l 1
 0x00 
+```
+
+```C
+i2c-tools> i2cconfig --port=0 --sda=18 --scl=19 --freq=100000
+i2c-tools> i2cget -c 0x40 -r 0xE0 -l 1
+0x67 
+i2c-tools> i2cset -c 0x40 -r 0xE0 0x00
+I (235302) cmd_i2ctools: Write OK
+
+
+i2c-tools> i2cget -c 0x40 -r 0xE0 -l 1
+0x67 
+i2c-tools> i2cget -c 0x40 -r 0xE0 -l 2
+0x67 0x08 
 ```
