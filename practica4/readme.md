@@ -123,23 +123,16 @@ i2c-tools> i2cdetect
 70: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 ```
 
-Una vez que ya conocemos la dirección del dispositivo, llevaremos a cabo una lectura del registro a utilizar mediante la instrucción `i2cget`, la cual nos devuelve el valor 0x00, puesto que el registro acaba de ser inicializado. En el siguiente cuadro podemos ver la salida de dicha ejecución:
+Una vez que ya conocemos la dirección del dispositivo, llevaremos a cabo una lectura de la temperatura medida por el mismo, la cual solicitaremos a través del acceso al registro 0xF3. Debemos tener en cuenta, que antes de poder realizar la lectura desde el dispositivo, necesitamos enviar un mensaje de escritura hacia el registro que queremos leer en cuestión. Esto quiere decir que deberemos realizar la siguientes secuencia:
+
+ 1) Mensaje de escritura hacia el registro ha leer sin ningún parámetro en el campo Valor.
+ 2) Mensaje de lectura desde el registro que queremos leer con una longitud lo suficientemente grande como para poder obtener toda la información necesaria (en nuestro caso 2).
 
 ```BASH
-i2c-tools> i2cget -c 0x40 -r 0x00 -l 1
-0x00 
+i2c-tools> i2cset -c 0x40 -r 0xF3
+I (75432) cmd_i2ctools: Write OK
+i2c-tools> i2cget -c 0x40 -l 2
+0x65 0x44 
 ```
 
-```C
-i2c-tools> i2cconfig --port=0 --sda=18 --scl=19 --freq=100000
-i2c-tools> i2cget -c 0x40 -r 0xE0 -l 1
-0x67 
-i2c-tools> i2cset -c 0x40 -r 0xE0 0x00
-I (235302) cmd_i2ctools: Write OK
-
-
-i2c-tools> i2cget -c 0x40 -r 0xE0 -l 1
-0x67 
-i2c-tools> i2cget -c 0x40 -r 0xE0 -l 2
-0x67 0x08 
-```
+En este punto ya hemos obtenido los datos de lectura de temperatura llevados a cabo por el sensor, por lo que únicamente necesitaríamos operar con los mismos para poder llevar a cabo el cálculo de dicho valor en grados.
