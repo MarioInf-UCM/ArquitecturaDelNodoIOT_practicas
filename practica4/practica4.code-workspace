@@ -4,6 +4,9 @@
 			"path": "i2c_tools"
 		},
 		{
+			"path": "check_CRC"
+		},
+		{
 			"path": "."
 		},
 		{
@@ -25,7 +28,18 @@
 			"esp_event_base.h": "c",
 			"esp_timer.h": "c",
 			"esp_err.h": "c",
-			"monitor-gpio.h": "c"
+			"monitor-gpio.h": "c",
+			"bitset": "c",
+			"*.tcc": "c",
+			"cstdio": "c",
+			"ratio": "c",
+			"system_error": "c",
+			"array": "c",
+			"functional": "c",
+			"regex": "c",
+			"tuple": "c",
+			"type_traits": "c",
+			"utility": "c"
 		}
 	}
 }
