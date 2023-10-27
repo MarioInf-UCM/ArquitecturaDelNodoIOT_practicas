@@ -1,0 +1,42 @@
+{
+	"folders": [
+		{
+			"path": "oneshot_read"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"i2c.h": "c",
+			"sdkconfig.h": "c",
+			"esp_log.h": "c",
+			"task.h": "c",
+			"adc.h": "c",
+			"freertos.h": "c",
+			"inttypes.h": "c",
+			"*.projbuild": "c",
+			"si7021.h": "c",
+			"esp_event.h": "c",
+			"esp_event_base.h": "c",
+			"esp_timer.h": "c",
+			"esp_err.h": "c",
+			"monitor-gpio.h": "c",
+			"bitset": "c",
+			"*.tcc": "c",
+			"cstdio": "c",
+			"ratio": "c",
+			"system_error": "c",
+			"array": "c",
+			"functional": "c",
+			"regex": "c",
+			"tuple": "c",
+			"type_traits": "c",
+			"utility": "c"
+		}
+	}
+}
