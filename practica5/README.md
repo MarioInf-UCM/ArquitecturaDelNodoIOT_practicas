@@ -1,0 +1,3 @@
+# PRÁCTICA 5 - Uso del ADC
+
+**ESTA PRÁCTICA NO ES ENTREGABLE**
