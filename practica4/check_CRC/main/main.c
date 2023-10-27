@@ -10,7 +10,7 @@
 #include "si7021.h"
 
 #define TIME_WAIT_TASK 2
-#define VERBOSE_MODE 0
+#define VERBOSE_MODE 1
 
 void taskShowTemperature();
 
@@ -32,7 +32,7 @@ void taskShowTemperature()
         temperature = 0;
         crcResult = false;
         readTemperature_withCRC(I2C_MASTER_NUM, &temperature, &crcResult, VERBOSE_MODE);
-        printf("\nTemperatura %f  -  crcResult: %d\n\n\n", temperature, crcResult);
+        printf("\nTemperatura %f  -  crcResult: %s\n\n\n", temperature, (crcResult)? "true" : "false");
         vTaskDelay(TIME_WAIT_TASK * 1000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);

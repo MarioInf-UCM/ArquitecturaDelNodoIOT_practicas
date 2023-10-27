@@ -223,7 +223,7 @@ float _temp_code_to_celsius(const uint16_t temp_code);
 
 
 //****************************************************
-// FUNCIONES AGREGADAS PARA REALZIAR EL CÁLCULO DE CRC
+// FUNCIONES AGREGADAS PARA REALIZAR EL CÁLCULO DE CRC
 //****************************************************
 
 void print_byte_as_bits(char val);
