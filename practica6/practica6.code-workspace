@@ -4,6 +4,9 @@
 			"path": "ej1_basic"
 		},
 		{
+			"path": "ej2_timer"
+		},
+		{
 			"path": "."
 		},
 		{
@@ -36,7 +39,11 @@
 			"regex": "c",
 			"tuple": "c",
 			"type_traits": "c",
-			"utility": "c"
+			"utility": "c",
+			"light_sleep_example.h": "c",
+			"esp_chip_info.h": "c",
+			"gpio.h": "c",
+			"esp_system.h": "c"
 		}
 	}
 }

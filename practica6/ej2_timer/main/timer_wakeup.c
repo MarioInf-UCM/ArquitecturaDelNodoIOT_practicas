@@ -6,7 +6,7 @@
 #include "esp_check.h"
 #include "esp_sleep.h"
 
-#define TIMER_WAKEUP_TIME_US    (0,5 * 1000 * 1000)
+#define TIMER_WAKEUP_TIME_US    (5 * 1000 * 1000)
 
 static const char *TAG = "timer_wakeup";
 
