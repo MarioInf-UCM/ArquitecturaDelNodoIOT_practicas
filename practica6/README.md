@@ -143,7 +143,7 @@ Visto que el segundo argumento es aquel que define el tipo de tensión en el que
 
 <br />
 
-## Ejercicio 2 - Uso de timers en el modo light Sleep
+## Ejercicio 2 - Uso de timers en el modo Light Sleep
 
 >Tareas
 >
@@ -254,3 +254,13 @@ Dicho esto, podemos sacar tres conclusiones del análisis:
 - Los timer siguen funcionando aunque la tarea se encuentra parada mediante `vTaskDelay()`, los cual es debido a que cuando este se ejecuta, una nueva tarea es la encargada de ejecutar la función handler asignada al mismo.
 - Cuando el SoC se encuentra en modo Light Sleep no se ejecutan las funciones handler vinculadas a los timer, puesto que los recursos de la CPU se ven limitados y no se puede llevar a cabo la creación del hilo que ejecuta dicha función.
 - Aunque el sistema se encuentre en Light Sleep, los eventos producidos por los timers no se pierden, sino que estos permanecen en la cola correspondiente hasta que el sistema despierta, los detecta y pasa a atenderlos.
+
+
+
+<br />
+
+## Ejercicio 3 - Uso básico del modo Deep Sleep
+
+>Tareas
+>
+>Modifica el código anterior para que, tras 5 pasos por ligth-sleep, pasemos a deep-sleep. Incluye código para determinar el motivo por el que hemos despertado de deep-sleep y muéstralo por pantalla.

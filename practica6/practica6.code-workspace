@@ -7,6 +7,9 @@
 			"path": "ej2_timer"
 		},
 		{
+			"path": "ej3_deepSleep"
+		},
+		{
 			"path": "."
 		},
 		{
