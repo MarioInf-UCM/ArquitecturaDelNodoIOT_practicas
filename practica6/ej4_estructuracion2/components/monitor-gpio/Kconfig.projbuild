@@ -1,0 +1,15 @@
+menu "MONITOR-GPIO Configuration"
+
+    config NBUTTON
+        int "SCANNING FREQUENCY (s)"
+        default 1
+        help
+            Scanning frecuency for button
+    
+    config BUTTON_GPIO_PORT
+        int "GPIO INPUT PORT FOR BUTTON"
+        default 25
+        help
+            GPIO input port for button
+
+endmenu

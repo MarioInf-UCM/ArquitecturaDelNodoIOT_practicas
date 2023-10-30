@@ -17,7 +17,7 @@ El primer paso para poder desarrollar el proyecto será e montaje de los compone
 
 El montaje debe llevarse a cabo conectando el interruptor en serie con la resistencia de pull-up, ambos realizando un enlace entre el pin de 3.3v y el pin GPIO especificado para despertar a la placa. Por otra parte, el capacitador debe conectarse al interruptor y a tierra, de la misma manera que puede verse en al siguiente imagen: 
 
-<img src="images/" alt="drawing" style="width:100%; 
+<img src="images/ensamble.jpeg" alt="drawing" style="width:60%; 
     display: block;
     margin-left: auto;
     margin-right: auto;
