@@ -24,7 +24,7 @@
 
 
 void timerHandler_printTime(){
-    printf("Timer de ejecución periodica. Tiempo: %lld\n", esp_timer_get_time());
+    printf("Timer de ejecución periódica. Tiempo: %lld\n", esp_timer_get_time());
     return;
 }
 

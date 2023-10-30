@@ -5,7 +5,7 @@
 
 >Tareas
 >
->Hacer funcionar el ejemplo, permitiendo que volvamos de light-sleep únicamente por untimer o por GPIO.
+>Hacer funcionar el ejemplo, permitiendo que volvamos de light-sleep únicamente por un timer o por GPIO.
 
 Para llevar a cabo el presente ejercicio vamos a utilizar como base el ejemplo **system/light_sleep**, el cual implementa la funcionalidad básica para llevar a nuestra placa a modo de ahorra de energía **light_sleep**, además de configurar una serie de fuentes que pueden ser utilizadas para despertar al sistema. En nuestro caso utilizare únicamente dos de ellas: El timer y el GPIO.
 
@@ -25,7 +25,7 @@ El montaje debe llevarse a cabo conectando el interruptor en serie con la resist
     margin-botton: 1%;
 "/>
 
-Una vez realizado el montaje, vamos a ligeramente el ejemplo para poder determinar como se llevarán a cabo los eventos que despierten la placa. En nuestro caso vamos a especificar que el timer que lleva a cabo el proceso de despertar de forma periódica se lleve a cabo cada 5 segundos, mientras que el pin GPIO utilizado para poder utilizar nuestro interruptor será el número 14 (esto teniendo en cuenta que estamos utilizando una placa STM32 y sobre todo por contar con una mayor comodidad a la hora de ejecutar el ejemplo).
+Una vez realizado el montaje, vamos a ligeramente el ejemplo para poder determinar como se llevarán a cabo los eventos que despierten la placa. En nuestro caso vamos a especificar que el timer que lleva a cabo el proceso de despertar de forma periódica se lleve a cabo cada 5 segundos, mientras que el pin GPIO utilizado para poder utilizar nuestro interruptor será el número 14 (esto teniendo en cuenta que estamos utilizando una placa ESP32 y sobre todo por contar con una mayor comodidad a la hora de ejecutar el ejemplo).
 
 En los siguientes cuadros podemos ver cambas especificaciones mediante el uso de variables globales, las cuales se encuentran en lso ficheros **timer_wakeup.c** y **gpio_wakeup.c** respectivamente:
 
@@ -80,7 +80,7 @@ Returned from light sleep, reason: timer, t=25129 ms, slept for 5000 ms
 >
 >¿Qué número de GPIO está configurado por defecto para despertar al sistema? ¿Está conectado dicho GPIO a algún elemento de la placa ESP Devkit-c que estamos usando? Puedes tratar de responder consultando el esquemático de la placa
 
-En nuestro caso hemos llevado a cabo una modificación del pin GPIO utilizado para despertar la placa (sobre todo por comodidad), sin embargo, en el siguiente cuadro podemos ver la configuración establecida por defecto y como esta depende del modelo concreto de placa que estemos utilizando. En nuestro caso, teniendo en cuenta que estamos utilizado el SoC STM32, el pin utilizado por defecto es el número 0.
+En nuestro caso hemos llevado a cabo una modificación del pin GPIO utilizado para despertar la placa (sobre todo por comodidad), sin embargo, en el siguiente cuadro podemos ver la configuración establecida por defecto y como esta depende del modelo concreto de placa que estemos utilizando. En nuestro caso, teniendo en cuenta que estamos utilizado el SoC ESP32, el pin utilizado por defecto es el número 0.
 
 ```C
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32H2 \
@@ -212,28 +212,45 @@ I (371) gpio_wakeup: gpio wakeup source is ready
 I (381) timer_wakeup: timer wakeup source is ready
 I (381) uart: queue free spaces: 20
 I (401) uart_wakeup: uart wakeup source is ready
-Comenzamos a dormir descpués de la configuración inicial
 I (401) main_task: Returned from app_main()
-Timer de ejecución periodica. Tiempo: 579867
-Timer de ejecución periodica. Tiempo: 1079831
-Timer de ejecución periodica. Tiempo: 1579831
-Timer de ejecución periodica. Tiempo: 2079831
-Timer de ejecución periodica. Tiempo: 2579831
-Finalizamos de dormir despues de la configuración inicial
-Timer de ejecución periodica. Tiempo: 3079831
-Timer de ejecución periodica. Tiempo: 8086219
-Timer de ejecución periodica. Tiempo: 8086425
-Timer de ejecución periodica. Tiempo: 8086610
-Timer de ejecución periodica. Tiempo: 8087699
-Timer de ejecución periodica. Tiempo: 8091879
-Timer de ejecución periodica. Tiempo: 8096046
-Timer de ejecución periodica. Tiempo: 8100212
-Timer de ejecución periodica. Tiempo: 8104379
-Timer de ejecución periodica. Tiempo: 8108545
-Timer de ejecución periodica. Tiempo: 8112712
+Comenzamos a dormir después de la configuración inicial
+Timer de ejecución periódica. Tiempo: 579867
+Timer de ejecución periódica. Tiempo: 1079831
+Timer de ejecución periódica. Tiempo: 1579831
+Timer de ejecución periódica. Tiempo: 2079831
+Timer de ejecución periódica. Tiempo: 2579831
+Timer de ejecución periódica. Tiempo: 3079831
+Finalizamos de dormir después de la configuración inicial
+Timer de ejecución periódica. Tiempo: 8086219
+Timer de ejecución periódica. Tiempo: 8086425
+Timer de ejecución periódica. Tiempo: 8086610
+Timer de ejecución periódica. Tiempo: 8087699
+Timer de ejecución periódica. Tiempo: 8091879
+Timer de ejecución periódica. Tiempo: 8096046
+Timer de ejecución periódica. Tiempo: 8100212
+Timer de ejecución periódica. Tiempo: 8104379
+Timer de ejecución periódica. Tiempo: 8108545
+Timer de ejecución periódica. Tiempo: 8112712
 Returned from light sleep, reason: timer, t=8091 ms, slept for 5004 ms
 Finalizando ejecución.
 Timer periódico eliminado.
 Fuentes para despertar el SoC eliminadas.
-Programa finalizado con exito.
+Programa finalizado con éxito.
 ```
+
+
+<br />
+
+
+>Cuestión
+>
+>¿Qué observas en la ejecución de los timer?¿Se ejecutan en el instante adecuado? ¿Se pierde alguno?
+
+Si analizamos la salida obtenida anteriormente haciendo incapié en los mensajes correspondientes al timer que imprime el tiempo, podemos ver como hay una gran alteración en su funcionamiento entre el periodo en el que el sistema se encuentra durmiendo mediante la función `vTaskDelay()` y cuando el mismo entra en el estado Light Sleep.
+
+En la primera fase, cuando el sistema se encuentra unicamente dormido por `vTaskDelay()`, podemos apreciar como los mensajes del timer se siguen imprimiendo respetando los tiempos marcados por el el mismo. Por el contrario, durante el periodo en el que el sistema esta en estado Light Sleep, dichos mensajes no son imprimidos por pantalla, sin embargo, estos som imprimidos todos de manera automática cuando se abandona dicho modo y, como es evidente, sin respeta los tiempos marcados por el timer.
+
+Dicho esto, podemos sacar tres conclusiones del análisis:
+- Los timer siguen funcionando aunque la tarea se encuentra parada mediante `vTaskDelay()`, los cual es debido a que cuando este se ejecuta, una nueva tarea es la encargada de ejecutar la función handler asignada al mismo.
+- Cuando el SoC se encuentra en modo Light Sleep no se ejecutan las funciones handler vinculadas a los timer, puesto que los recursos de la CPU se ven limitados y no se puede llevar a cabo la creación del hilo que ejecuta dicha función.
+- Aunque el sistema se encuentre en Light Sleep, los eventos producidos por los timers no se pierden, sino que estos permanecen en la cola correspondiente hasta que el sistema despierta, los detecta y pasa a atenderlos.
