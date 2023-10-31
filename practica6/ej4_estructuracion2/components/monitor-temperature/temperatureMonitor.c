@@ -3,6 +3,8 @@
 #include "driver/i2c.h"
 #include "sdkconfig.h"
 #include "esp_event_base.h"
+#include "esp_sleep.h"
+#include "esp_check.h"
 
 #include "../i2c_config/i2c_config.h"
 #include "../si7021/si7021.h"
@@ -23,13 +25,13 @@ esp_timer_handle_t humidity_timer;
 
 uint64_t us_read_period = READ_PERIOD * 1000000;
 
+
 esp_event_loop_handle_t TemperatureMonitor_init()
 {
 
     esp_err_t result;
     result = i2c_master_init();
-    if (result != ESP_OK)
-    {
+    if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo inicializar el comunicador i2c.");
         vTaskDelete(NULL);
     }
@@ -42,29 +44,17 @@ esp_event_loop_handle_t TemperatureMonitor_init()
         .task_core_id = tskNO_AFFINITY};
 
     result = esp_event_loop_create(&eventLoop_args, &eventLoop);
-    if (result != ESP_OK)
-    {
+    if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo crear el bucle de eventos.");
         return NULL;
     }
 
-    // Define timers for temperature and humidity
-    const esp_timer_create_args_t temperature_timer_args = {
-        .callback = &TemperatureMonitor_readTemperature,
-        .name = "temperature"};
-    esp_timer_create(&temperature_timer_args, &temperature_timer);
-
-    const esp_timer_create_args_t humidity_timer_args = {
-        .callback = &TemperatureMonitor_readHumidity,
-        .name = "humidity"};
-    esp_timer_create(&humidity_timer_args, &humidity_timer);
-
-    // Start both timers
-    esp_timer_start_periodic(temperature_timer, us_read_period);
-    esp_timer_start_periodic(humidity_timer, us_read_period);
+    //Definición del timer de Makeup
+    ESP_RETURN_ON_ERROR(esp_sleep_enable_timer_wakeup(us_read_period), TAG, "ERROR..: No se pudo configurar el timer Makeup para la lectura de temperatura y humedad.");
 
     return eventLoop;
 }
+
 
 esp_err_t TemperatureMonitor_readTemperature()
 {
@@ -87,6 +77,7 @@ esp_err_t TemperatureMonitor_readTemperature()
     return ESP_OK;
 }
 
+
 esp_err_t TemperatureMonitor_readHumidity()
 {
     float humidity = 0.0f;
@@ -107,6 +98,37 @@ esp_err_t TemperatureMonitor_readHumidity()
     return ESP_OK;
 }
 
+
+esp_err_t TemperatureMonitor_readTemperatureAndHumidity(){
+
+    struct Data data={
+        .temperature = 0.0f,
+        .humidity = 0.0f,
+    };
+    esp_err_t result;
+    
+    result = readTemperature(I2C_MASTER_NUM, &data.temperature);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR..: No se pudo realizar la lectura de temperatura.");
+        return result;
+    }
+    
+    result = readHumidity(I2C_MASTER_NUM, &data.humidity);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR..: No se pudo realizar la lectura de humedad.");
+        return result;
+    }
+
+    result = esp_event_post_to(eventLoop, TEMPERATURE_MONITOR_EVENTS, EMPERATURE_AND_HUMIDITY_READED_EVENT, &data, sizeof(data), 0);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR..: No se pudo lanzar el evento TEMPERATURE_MONITOR_EVENTS - EMPERATURE_AND_HUMIDITY_READED_EVENT.");
+        return result;
+    }
+
+    return ESP_OK;
+}
+
+
 esp_err_t TemperatureMonitor_stop()
 {
     esp_timer_stop(temperature_timer);
@@ -114,6 +136,7 @@ esp_err_t TemperatureMonitor_stop()
 
     return ESP_OK;
 }
+
 
 esp_err_t TemperatureMonitor_start()
 {

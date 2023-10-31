@@ -30,7 +30,8 @@ void example_wait_gpio_inactive(void)
 {
     printf("Waiting for GPIO%d to go high...\n", GPIO_WAKEUP_NUM);
     while (gpio_get_level(GPIO_WAKEUP_NUM) == GPIO_WAKEUP_LEVEL) {
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_T    char* wakeup_reason;
+O_TICKS(10));
     }
 }
 
