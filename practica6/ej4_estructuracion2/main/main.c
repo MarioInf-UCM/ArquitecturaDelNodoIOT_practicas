@@ -52,7 +52,7 @@ void app_main(){
 
     //*************************************************************
     // Inicialización del comoponentes Mock WIFI - INICIO
-/*     loop_wifi_mock = wifi_mock_init();
+    loop_wifi_mock = wifi_mock_init();
 
     result = esp_event_handler_register_with(loop_wifi_mock, WIFI_MOCK, WIFI_MOCK_EVENT_WIFI_CONNECTED, task_mock_wifi_handler, &loop_wifi_mock);
     if (result != ESP_OK){
@@ -71,7 +71,7 @@ void app_main(){
         vTaskDelete(NULL);
     }
 
-    wifi_connect(); */
+    wifi_connect();
     // Inicialización del comoponentes Mock WIFI - FIN
     //*************************************************************
 
@@ -106,37 +106,37 @@ void app_main(){
 
     //*************************************************************
     // Inicialización del comoponentes Mock Flas - INICIO
-/*     result = circularBuffer_init(100);
+     result = circularBuffer_init(100);
     if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo inicializar el buffer de memoria flash");
         vTaskDelete(NULL);
-    } */
+    }
     // Inicialización del comoponentes Mock Flas - FIN
     //*************************************************************
 
 
     //*************************************************************
     // Inicialización del comoponentes Monitor GPIO - INICIO
-/*     loop_monitor_gpio = monitor_gpio_init();
+     loop_monitor_gpio = monitor_gpio_init();
 
     result = esp_event_handler_register_with(loop_monitor_gpio, MONITOR_GPIO, MONITOR_GPIO_BUTTON_PRESSED, task_monitor_gpio_handler, loop_monitor_gpio);
     if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo registrar la manejadora del evento MONITOR_GPIO - MONITOR_GPIO_BUTTON_PRESSED.");
         vTaskDelete(NULL);
-    } */
+    }
     // Inicialización del comoponentes Monitor GPIO - FIN
     //*************************************************************
 
 
     //*************************************************************
     // Inicialización del comoponentes Consola - INICIO
-/*     loop_console = aniot_console_init();
+    loop_console = aniot_console_init();
 
     esp_event_handler_register_with(loop_console, ANIOT_CONSOLE_EVENT, CMD_MONITOR_EVENT, task_console_handler, loop_console);
     if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo registrar la manejadora del evento MONITOR_GPIO - MONITOR_GPIO_BUTTON_PRESSED.");
         vTaskDelete(NULL);
-    } */
+    }
     // Inicialización del comoponentes Consola - FIN
     //*************************************************************
 
@@ -149,6 +149,8 @@ void app_main(){
 
 static void goToSleep(){
 
+    ESP_LOGI(TAG, "Preparándose para entrar en modo Light Sleep.");
+    wifi_disconnect();
     ESP_LOGI(TAG, "Entrando en modo Light Sleep.\n");
     uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
     esp_light_sleep_start();
@@ -208,6 +210,7 @@ static void task_mock_wifi_handler(void *handler_args, esp_event_base_t base, in
                 wifi_connect();
             }
             break;
+
         default:
             ESP_LOGE(TAG, "ERROR..: UNKNOWN EVENT FROM WIFI_MOCK EVENT BASE");
             break;
@@ -216,52 +219,64 @@ static void task_mock_wifi_handler(void *handler_args, esp_event_base_t base, in
 
 
 
-static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs)
-{
-    struct Data data = { 
-        .temperature = 0.0f,
-        .humidity = 0.0f,
-    };
+static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs){
+
     if (baseEvent != TEMPERATURE_MONITOR_EVENTS){
         ESP_LOGE(TAG, "ERROR..: Familia de eventos desconocida");
         return;
     }
 
+    struct Data data = { 
+        .temperature = 0.0f,
+        .humidity = 0.0f,
+    };
+    float pendingData;
+
+    wifi_connect();
+    if (send_data == 1){
+        while (getDataLeft() > 0){
+            pendingData = *(float *)readFromFlash(sizeof(float));
+            send_data_wifi(&pendingData, sizeof(pendingData));
+        }
+    }
+
     if (idEvent == TEMPERATURE_READED_EVENT){
         data.temperature = *(float *)eventArgs;
         ESP_LOGI(TAG, "Temperatura: %f", data.temperature);
-    }
-    else if (idEvent == HUMIDITY_READED_EVENT){
+        if (send_data == 1){
+            send_data_wifi(&data.temperature , sizeof(data.temperature ));
+        }else{
+           writeToFlash(&data.temperature, sizeof(data.temperature));         
+        }
+
+    }else if (idEvent == HUMIDITY_READED_EVENT){
         data.humidity = *(float *)eventArgs;
         ESP_LOGI(TAG, "Humedad: %f", data.humidity);
-    }
-    else if (idEvent == EMPERATURE_AND_HUMIDITY_READED_EVENT){
+        if (send_data == 1){
+            send_data_wifi(&data.humidity , sizeof(data.humidity ));
+        }else{
+           writeToFlash(&data.humidity, sizeof(data.humidity));         
+        }
+
+    }else if (idEvent == EMPERATURE_AND_HUMIDITY_READED_EVENT){
         data = *(struct Data *)eventArgs;
         ESP_LOGI(TAG, "Temperatura: %f", data.temperature);
         ESP_LOGI(TAG, "Humedad: %f", data.humidity);
-    }
-    else
-    {
+        if (send_data == 1){
+            send_data_wifi(&data.temperature , sizeof(data.temperature ));
+            send_data_wifi(&data.humidity , sizeof(data.humidity ));
+        }else{
+            writeToFlash(&data.temperature, sizeof(data.temperature));         
+            writeToFlash(&data.humidity, sizeof(data.humidity));         
+        }
+
+    }else{
         ESP_LOGE(TAG, "ERROR..: ID del evento desconocida");
         return;
     }
 
-    goToSleep();
 
-/*     if (send_data == 1)
-    {
-        while (getDataLeft() > 0)
-        {
-            float pendingData;
-            pendingData = *(float *)readFromFlash(sizeof(float));
-            send_data_wifi(&pendingData, sizeof(pendingData));
-        }
-        send_data_wifi(&data, sizeof(data));
-    }
-    else
-    {
-        writeToFlash(&data, sizeof(data));
-    } */
+    goToSleep();
     return;
 }
 
