@@ -55,7 +55,7 @@ esp_event_loop_handle_t monitor_gpio_init()
 
 static void gpio_timer_callback(void *arg)
 {
-    ESP_LOGI(TAG, "Checking button status");
+    //ESP_LOGI(TAG, "Checking button status");
     if (gpio_get_level(CONFIG_BUTTON_GPIO_PORT))
     {
         ESP_LOGI(TAG, "Button pressed");

@@ -356,14 +356,7 @@ rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
 >3) Compruebe el motivo por el que se produce cada reinicio y lo anote en NVS.
 >4) Escriba en NVS la última medida del sensor tomada.
 
-Para llevar a cabo el presente ejercicio con mayor claridad, se estructurará el desarrollo del mismo en base a diferentes pasos que coinciden con los indicados en el enunciado.
-
-
-<br />
-
-### Paso 1 - Entrada al Light Sleep siempre que sea posible
-
-En presente paso puede llegar realizarse de dos maneras distintas:
+Para llevar a cabo el presente ejercicio con mayor claridad, se estructurará el desarrollo del mismo en base a diferentes pasos que coinciden con los indicados en el enunciado. El desarrollo del primer paso, se puede realizar de dos maneras diferentes:
 - Configurar los distintos eventos lanzados por el sistema para que estos despierten el SoC y gestionar manualmente la entrada en el modo Light Sleep.
 - Utilizar el **Power Manager (PM)** para llevar a acabo la entrada automática en el modo Light Sleep.
 
@@ -498,3 +491,46 @@ I (15700) MAIN: Entrando en modo Light Sleep.
 <br />
 
 ### Paso 1B - Entrada al Light Sleep mediante el Power Manager
+
+Esta opción es la utilizada para el desarrollo del resto del ejercicio y a la vez la más simple de implementar, puesto que únicamente necesitaremos configurar el **Power Manager** mediante una estructura del tipo **esp_pm_config_t**. El código referente a dicha configuración podemos verlo en el siguiente cuadro, el cual se encuentra al principio de la función **app_main()** y contiene especificadas las frecuencias a las cuales trabajará el sistema y la capacidad de entrar en el modo Light Sleep siempre que sea posible:
+
+```C
+esp_pm_config_t pmConfig = {
+    .max_freq_mhz = 240,
+    .min_freq_mhz = 10,
+    .light_sleep_enable = true
+};
+result = esp_pm_configure(&pmConfig);
+if (result != ESP_OK){
+    ESP_LOGE(TAG, "ERROR (%s)..: No se pudo configurar adecuadamente el Power Manager", esp_err_to_name(result));
+    vTaskDelete(NULL);
+}
+```
+
+Para que esto pueda funcionar correctamente necesitaremos habilitar las opciones **CONFIG_PM_ENABLE** y **CONFIG_FREERTOS_USE_TICKLESS_IDLE** desde el menú de configuración del proyecto. En las siguientes imágenes podemos ver como se ha llevado a cabo dicha configuración:
+
+<img src="images/menuconfig_options1.png" alt="drawing" style="width:40%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+<img src="images/menuconfig_options2.png" alt="drawing" style="width:40%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+Una vez se ha llevado a cabo la configuración correctamente y se ejecuta la aplicación, podemos ver como una de las primeras líneas obtenidas nos indica que se han cambiado las frecuencias de trabajo y se ha activado la entrada automática al modo Light Sleep. En el siguiente cuadro podemos ver dicha salida:
+
+```BASH
+I (404) main_task: Calling app_main()
+I (404) MAIN: Comenzando inicialización de componentes.
+I (404) pm: Frequency switching config: CPU_MAX: 240, APB_MAX: 240, APB_MIN: 10, Light sleep: ENABLED
+```
+
+### Paso 2 - Entrada en el modo Deep Sleep
