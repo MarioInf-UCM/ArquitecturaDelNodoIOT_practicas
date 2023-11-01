@@ -49,8 +49,8 @@ esp_event_loop_handle_t TemperatureMonitor_init()
         return NULL;
     }
 
-    //Definición del timer de Makeup
-    ESP_RETURN_ON_ERROR(esp_sleep_enable_timer_wakeup(us_read_period), TAG, "ERROR..: No se pudo configurar el timer Makeup para la lectura de temperatura y humedad.");
+    //Definición del timer de Wakeup
+    ESP_RETURN_ON_ERROR(esp_sleep_enable_timer_wakeup(us_read_period), TAG, "ERROR..: No se pudo configurar el timer Wakeup para la lectura de temperatura y humedad.");
 
     return eventLoop;
 }

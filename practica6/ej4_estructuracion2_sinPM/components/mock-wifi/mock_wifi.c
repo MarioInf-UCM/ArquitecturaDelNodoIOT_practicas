@@ -98,7 +98,15 @@ esp_err_t send_data_wifi(void *data, size_t size)
 
 static void ip_timer_callback(void *arg)
 {
-    ESP_LOGI(TAG, "Wifi got IP");
+    ESP_LOGI(TAG, "Direccion IP obtenida");
+    wifi_state = CONNECTED_WITH_IP;
+    esp_event_post_to(loop_connect, WIFI_MOCK, WIFI_MOCK_EVENT_WIFI_GOT_IP, NULL, 0, portMAX_DELAY);
+    esp_timer_stop(ip_timer);
+}
+
+void wifi_getIp()
+{
+    ESP_LOGI(TAG, "Direccion IP obtenida");
     wifi_state = CONNECTED_WITH_IP;
     esp_event_post_to(loop_connect, WIFI_MOCK, WIFI_MOCK_EVENT_WIFI_GOT_IP, NULL, 0, portMAX_DELAY);
     esp_timer_stop(ip_timer);

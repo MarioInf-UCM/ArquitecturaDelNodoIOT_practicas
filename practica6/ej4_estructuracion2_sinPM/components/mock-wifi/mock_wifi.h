@@ -32,6 +32,7 @@ enum
 
 esp_event_loop_handle_t wifi_mock_init(void);
 esp_err_t wifi_connect(void);
+void wifi_getIp();
 esp_err_t wifi_disconnect(void);
 esp_err_t send_data_wifi(void *data, size_t size);
 

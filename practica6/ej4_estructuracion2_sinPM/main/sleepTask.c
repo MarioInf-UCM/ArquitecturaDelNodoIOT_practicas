@@ -51,11 +51,15 @@ void sleepTask_function(void *parameters){
         switch (esp_sleep_get_wakeup_cause()) {
             case ESP_SLEEP_WAKEUP_TIMER:
                 ESP_LOGI(TAG, "Saliendo del modo Light Sleep. Motivo: Timer wakeup.");
+                wifi_connect();
+                wifi_getIp();
                 TemperatureMonitor_readTemperatureAndHumidity();
                 break;
 
             case ESP_SLEEP_WAKEUP_GPIO:
                 ESP_LOGI(TAG, "Saliendo del modo Light Sleep. Motivo: GPIO wakeup.");
+                wifi_connect();
+                wifi_getIp();
                 gpio_timer_callback(NULL);
                 break;
 

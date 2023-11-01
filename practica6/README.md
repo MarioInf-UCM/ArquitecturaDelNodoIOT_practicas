@@ -283,11 +283,142 @@ Para llevar a cabo el presente ejercicio con mayor claridad, se estructurará el
 
 <br />
 
-### Paso 1 - Entrar en Light Sleep siempre ue se posible
+### Paso 1 - Entrada al Light Sleep siempre que sea posible
 
 En presente paso puede llegar realizarse de dos maneras distintas:
 - Configurar los distintos eventos lanzados por el sistema para que estos despierten el SoC y gestionar manualmente la entrada en el modo Light Sleep.
 - Utilizar el **Power Manager (PM)** para llevar a acabo la entrada automática en el modo Light Sleep.
 
-Para llevar a cabo el desarrollo del presente proyecto se ha optado por la implementación de la segunda opción, es decir, que la entrada al modo Light Sleep sea gestionada automáticamente por el PM. 
+Para llevar a cabo el desarrollo del presente proyecto se ha optado por la implementación de la segunda opción, es decir, que la entrada al modo Light Sleep sea gestionada automáticamente por el PM. Sin embargo, también se ha llevado a cabo la desarrollo de un segundo ejercicio donde se ha realizado únicamente la gestión manual de la entrada al Light Sleep, de este modo, podemos ver como se deberían hacer ambos métodos.
 
+Esto quiere decir que el presente ejercicio esta conformado por dos proyectos: El primero implementa toda la funcionalidad del ejercicio y es denominado **ej4_estructurcion2**, mientras que el segundo únicamente implementa la gestión manual de entrada al Light Sleep y se denomina **ej4_estructuracion2_sinPM**. A continuación analizaremos ambos ejercicios
+
+
+
+<br />
+
+### Paso 1A - Entrada al Light Sleep con gestión manual
+
+Para llevar a cabo esto necesitaremos modificar los siguientes aspectos del ejercicio original, con el objetivo de que podamos saber cuando entrar y salir del Light Sleep:
+- Los eventos periódicos de lectura y tempera de humedad deben ser timer de wakeup.
+- La pulsación del botón para pasar al modo consola debe ser un GPIO wakeup.
+- El módulo WIFI debe conectarse y desconectarse al salir y entrar del modo Light Sleep, respectivamente.
+- Se debe dar a conocer al Soc cuando este tiene vía libre para poder dormirse.
+
+Para cambiar los eventos emitidos por el componente **monitor-temperature** por eventos de wakeup, deberemos modificarlos dentro de la función **temperatureMonitor_init()**, donde especificaremos el periodo con el que se llevará a cabo el despertar del SoC con el objetivo de leer la temperatura y la humedad. En el siguiente cuadro podemos ver la definición de dichos timer de wakeup:
+
+```C
+//Definición del timer de Wakeup
+ESP_RETURN_ON_ERROR(esp_sleep_enable_timer_wakeup(us_read_period), TAG, "ERROR..: No se pudo configurar el timer Wakeup para la lectura de temperatura y humedad.");
+```
+
+Para implementar el GPIO wakeup que despertará al SoC cada vez que se quiera entrar en el modo consola, deberá registrarse en el componente **monitor-gpio** dentro de la función **monitorGPIO_init()**. En el siguiente cuadro podemos ver la configuración de dicho wakeup.
+
+```C
+gpio_config_t config = {
+        .pin_bit_mask = BIT64(BUTTON_GPIO_PORT),
+        .mode = GPIO_MODE_INPUT,
+        .pull_down_en = false,
+        .pull_up_en = true,
+        .intr_type = GPIO_INTR_DISABLE
+};
+
+status = gpio_config(&config);
+if(status != ESP_OK){
+    ESP_LOGE(TAG, "ERROR..: No se pudo llevar a cabo la inicialición del GPIO %d", BUTTON_GPIO_PORT);
+}
+
+status = gpio_wakeup_enable(BUTTON_GPIO_PORT, GPIO_WAKEUP_LEVEL == 0 ? GPIO_INTR_LOW_LEVEL : GPIO_INTR_HIGH_LEVEL);
+if(status != ESP_OK){
+    ESP_LOGE(TAG, "ERROR..: No se pudo habilitar el GPIO wakeup");
+}
+
+status = esp_sleep_enable_gpio_wakeup();
+if(status != ESP_OK){
+    ESP_LOGE(TAG, "ERROR..: No se pudo configurar el GPIO wakeup");
+}
+
+/* Make sure the GPIO is inactive and it won't trigger wakeup immediately */
+example_wait_gpio_inactive();
+ESP_LOGI(TAG, "GPIO wakeup inicializado con éxito.");
+```
+
+Por otra parte, gestionar la conexión y desconexión del módulo WIFI cada vez que se entra y sale del modo Light Sleep se implementa dentro de la función **sleepTask_function()** en el fichero **sleepTask.c**. En el siguiente cuadro tenemos la sección de código correspondiente a la entrada dentro del modo Light Sleep y a la gestión de la salida del mismo por las distintas vías que están programadas para ello. Podemos ver como antes de llevar a cano la entrada al modo Light Sleep, se llama a función que desconecta el módulo WIFI, mientras que cuando el SoC es despertado, la primera acción es volver a conectar dicho módulo.
+
+```C
+ESP_LOGI(TAG, "Preparándose para entrar en modo Light Sleep.");
+wifi_disconnect();
+ESP_LOGI(TAG, "Entrando en modo Light Sleep.\n");
+uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
+esp_light_sleep_start();
+
+
+switch (esp_sleep_get_wakeup_cause()) {
+    case ESP_SLEEP_WAKEUP_TIMER:
+        ESP_LOGI(TAG, "Saliendo del modo Light Sleep. Motivo: Timer wakeup.");
+        wifi_connect();
+        TemperatureMonitor_readTemperatureAndHumidity();
+        break;
+
+    case ESP_SLEEP_WAKEUP_GPIO:
+        ESP_LOGI(TAG, "Saliendo del modo Light Sleep. Motivo: GPIO wakeup.");
+        wifi_connect();
+        gpio_timer_callback(NULL);
+        break;
+
+    default:
+        ESP_LOGI(TAG, "Saliendo del modo Light Sleep. Motivo: Desconocido.");
+        xQueueSendToBack(queue, &readValue, 0);
+        break;
+}
+```
+
+El último paso será dar a conocer al SoC cuando se han llevado ac abo todas las acciones necesarias y se puede volver a entrar en el modo Light Sleep sin problemas. Para esto se empleará un buzón l cual se accederá cada vez que el SoC se despierte y después de que se hayan invocado las acciones a realizar. Cada vez que el sistema este listo para volver a dormirse, se comunicará a la tarea que gestiona la entrada a dicho modo mediante el uso de dicho buzón.
+
+En el siguiente cuadro podemos ver la sección donde se comprueba dicho buzón con el objetivo de volver al modo Light Sleep, el cual tiene un periodo máximo de espera de 10 segundos y se encuentra el final de la función **sleepTask_function()** en el fichero **sleepTask.c**.
+
+```C
+statusReturn =  xQueueReceive(queue, &readValue, pdMS_TO_TICKS(10000));
+if(statusReturn != pdTRUE){
+    ESP_LOGE(TAG, "ERROR (%d): No se pudo leer de la cola de retorno al modo Light Sleep. Se pasará al modo forzosamente", statusReturn);
+}
+```
+
+Una vez hecho todo esto, el sistema esta listo para entrar en el modo Light Sleep cada vez que sea necesario (salvando ciertos problemas referentes con el paralelismo pero que quedan fuera del alcance de la presente práctica), por que en el siguiente cuadro podemos evr ejemplo de al salida del mismo:
+
+```BASH
+I (390) MAIN: Comenzando inicialización de componentes.
+I (390) MOCK_WIFI: Wifi Initialized
+I (5400) MOCK_WIFI: Wifi Connected
+I (5400) MAIN: WIFI CONNECTED
+I (5400) BUFFER: Buffer correctamente inicializado.
+I (5400) gpio: GPIO[25]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 
+I (5410) MONITOR-GPIO: Esperando por que el GPIO 25 vuelva a su posición original.
+I (5410) MONITOR-GPIO: GPIO 25 Ha restablecido su posición original.
+I (5420) MONITOR-GPIO: GPIO wakeup inicializado con éxito.
+I (5430) MAIN: Finalizada inicialización de los componentes. Creando tarea para la gestión del modo Light Sleep
+I (5440) MAIN: Preparándose para entrar en modo Light Sleep.
+I (5450) MOCK_WIFI: Wifi Disconnected, call wifi_connect() to reconnect
+I (5450) MAIN: Entrando en modo Light Sleep.
+
+I (5470) MAIN: Saliendo del modo Light Sleep. Motivo: Timer wakeup.
+I (10470) MOCK_WIFI: Wifi Connected
+I (10470) MOCK_WIFI: Direccion IP obtenida
+I (10470) MAIN: WIFI CONNECTED
+I (10470) MAIN: WIFI GOT IP
+I (15670) MOCK_WIFI: Wifi Connected
+I (15670) MAIN: WIFI CONNECTED
+I (15670) MAIN: Temperatura: 23.828394
+I (15670) MAIN: Humedad: 54.474396
+I (15670) MOCK_WIFI: Error sending data, invalid state -> CONNECTED
+I (15680) MOCK_WIFI: Error sending data, invalid state -> CONNECTED
+I (15680) MAIN: Preparándose para entrar en modo Light Sleep.
+I (15690) MOCK_WIFI: Wifi Disconnected, call wifi_connect() to reconnect
+I (15700) MAIN: Entrando en modo Light Sleep.
+```
+
+
+
+<br />
+
+### Paso 1B - Entrada al Light Sleep mediante el Power Manager
