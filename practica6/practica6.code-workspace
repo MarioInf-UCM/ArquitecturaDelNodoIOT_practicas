@@ -10,6 +10,9 @@
 			"path": "ej3_deepSleep"
 		},
 		{
+			"path": "ej4_estructuracion2_sinPM"
+		},
+		{
 			"path": "ej4_estructuracion2"
 		},
 		{
@@ -50,7 +53,8 @@
 			"esp_chip_info.h": "c",
 			"gpio.h": "c",
 			"esp_system.h": "c",
-			"stdio.h": "c"
+			"stdio.h": "c",
+			"esp_check.h": "c"
 		}
 	}
 }

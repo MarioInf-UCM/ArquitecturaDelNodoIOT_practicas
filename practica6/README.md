@@ -264,3 +264,30 @@ Dicho esto, podemos sacar tres conclusiones del análisis:
 >Tareas
 >
 >Modifica el código anterior para que, tras 5 pasos por ligth-sleep, pasemos a deep-sleep. Incluye código para determinar el motivo por el que hemos despertado de deep-sleep y muéstralo por pantalla.
+
+
+<br />
+
+## Ejercicio 4 - Estructuración 2
+
+>Tareas
+>
+>Completar la aplicación de modo que:
+>1) Se configure el gestor de energía para que entre automáticamente en light-sleep cuando sea posible.
+>2) Tras 12 horas de funcionamiento, pasará al modo deep-sleep durante otras 12 horas (para pruebas, en lugar de 12 horas probadlo con 1 minuto).
+>3) Compruebe el motivo por el que se produce cada reinicio y lo anote en NVS.
+>4) Escriba en NVS la última medida del sensor tomada.
+
+Para llevar a cabo el presente ejercicio con mayor claridad, se estructurará el desarrollo del mismo en base a diferentes pasos que coinciden con los indicados en el enunciado.
+
+
+<br />
+
+### Paso 1 - Entrar en Light Sleep siempre ue se posible
+
+En presente paso puede llegar realizarse de dos maneras distintas:
+- Configurar los distintos eventos lanzados por el sistema para que estos despierten el SoC y gestionar manualmente la entrada en el modo Light Sleep.
+- Utilizar el **Power Manager (PM)** para llevar a acabo la entrada automática en el modo Light Sleep.
+
+Para llevar a cabo el desarrollo del presente proyecto se ha optado por la implementación de la segunda opción, es decir, que la entrada al modo Light Sleep sea gestionada automáticamente por el PM. 
+

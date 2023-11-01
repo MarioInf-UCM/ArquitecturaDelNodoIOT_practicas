@@ -104,13 +104,13 @@ void app_main(){
 
     //*************************************************************
     // Inicialización del comoponentes Monitor GPIO - INICIO
-/*      loop_monitor_gpio = monitor_gpio_init();
+    loop_monitor_gpio = monitor_gpio_init();
 
     result = esp_event_handler_register_with(loop_monitor_gpio, MONITOR_GPIO, MONITOR_GPIO_BUTTON_PRESSED, task_monitor_gpio_handler, loop_monitor_gpio);
     if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo registrar la manejadora del evento MONITOR_GPIO - MONITOR_GPIO_BUTTON_PRESSED.");
         vTaskDelete(NULL);
-    } */
+    }
     // Inicialización del comoponentes Monitor GPIO - FIN
     //*************************************************************
 

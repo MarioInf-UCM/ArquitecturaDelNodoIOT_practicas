@@ -19,6 +19,8 @@
 #include "esp_event_base.h"
 #include "sleepTask.h"
 
+#define BUTTON_GPIO_PORT CONFIG_BUTTON_GPIO_PORT
+#define GPIO_WAKEUP_LEVEL CONFIG_GPIO_WAKEUP_LEVEL
 #define QUEUE_SIZE 10
 
 // Modes & current state
@@ -54,6 +56,7 @@ void sleepTask_function(void *parameters){
 
             case ESP_SLEEP_WAKEUP_GPIO:
                 ESP_LOGI(TAG, "Saliendo del modo Light Sleep. Motivo: GPIO wakeup.");
+                gpio_timer_callback(NULL);
                 break;
 
             default:
@@ -61,11 +64,11 @@ void sleepTask_function(void *parameters){
                 xQueueSendToBack(queue, &readValue, 0);
                 break;
         }
+        
 
-        /* if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_TIMER) {
-             example_wait_gpio_inactive();
-        } */
-
+        if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO) {
+            example_wait_gpio_inactive();
+        }
 
         statusReturn =  xQueueReceive(queue, &readValue, pdMS_TO_TICKS(10000));
         if(statusReturn != pdTRUE){
@@ -101,7 +104,7 @@ void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseEvent, i
         }
     }
 
-    if (idEvent == TEMPERATURE_READED_EVENT){/*  */
+    if (idEvent == TEMPERATURE_READED_EVENT){
         data.temperature = *(float *)eventArgs;
         ESP_LOGI(TAG, "Temperatura: %f", data.temperature);
         if (send_data == 1){
@@ -180,6 +183,8 @@ void task_mock_wifi_handler(void *handler_args, esp_event_base_t base, int32_t i
 
 void task_monitor_gpio_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data){
 
+    bool sendValue = true;
+
     if (base != MONITOR_GPIO)
     {
         ESP_LOGE(TAG, "ERROR..: UNKNOWN EVENT FAMILY");
@@ -188,13 +193,15 @@ void task_monitor_gpio_handler(void *handler_args, esp_event_base_t base, int32_
 
     if (id == MONITOR_GPIO_BUTTON_PRESSED)
     {
-        ESP_LOGW(TAG, "BUTTON PRESSED, GOING ON CLONSOLE MODE...");
+        ESP_LOGI(TAG, "BUTTON PRESSED, GOING ON CLONSOLE MODE");
         current_state = CONSOLE;
         send_data = 0;
         monitor_gpio_stop();
-        //TemperatureMonitor_stop();
         wifi_disconnect();
         aniot_console_start();
+    }else if(id == MONITOR_GPIO_BUTTON_PRESSED_FAIL){
+        ESP_LOGW(TAG, "BUTTON NOT PRESSED, RETURNING");
+        xQueueSendToBack(queue, &sendValue, 0);
     }
     else
     {
@@ -219,7 +226,6 @@ void task_console_handler(void *handler_args, esp_event_base_t base, int32_t id,
         ESP_LOGW(TAG, "EXIT FROM CONSOLE MODE...");
         aniot_console_stop();
         current_state = MONITOR;
-        //TemperatureMonitor_start(); 
         wifi_connect();
         monitor_gpio_resume();
     }
@@ -230,25 +236,3 @@ void task_console_handler(void *handler_args, esp_event_base_t base, int32_t id,
     }
     return;
 }
-
-
-
-/* 
-
- file included from /home/mario/esp/esp-idf/components/freertos/FreeRTOS-Kernel/include/freertos/semphr.h:42,
-                 from /home/mario/esp/esp-idf/components/driver/uart/include/driver/uart.h:17,
-                 from /home/mario/Documentos/universidad/ArquitecturaDelNodoIOT/ArquitecturaDelNodoIOT_practicas/practica6/ej4_estructuracion2/main/sleepTask.c:12:
-/home/mario/Documentos/universidad/ArquitecturaDelNodoIOT/ArquitecturaDelNodoIOT_practicas/practica6/ej4_estructuracion2/main/sleepTask.c: In function 'temperatureReaded_handler':
-/home/mario/esp/esp-idf/components/freertos/FreeRTOS-Kernel/include/freertos/queue.h:456:36: warning: passing argument 2 of 'xQueueGenericSend' makes pointer from integer without a cast [-Wint-conversion]
-  456 |     xQueueGenericSend( ( xQueue ), ( pvItemToQueue ), ( xTicksToWait ), queueSEND_TO_BACK )
-      |                                    ^~~~~~~~~~~~~~~~~
-      |                                    |
-      |                                    int
-/home/mario/Documentos/universidad/ArquitecturaDelNodoIOT/ArquitecturaDelNodoIOT_practicas/practica6/ej4_estructuracion2/main/sleepTask.c:140:5: note: in expansion of macro 'xQueueSendToBack'
-  140 |     xQueueSendToBack(queue, true, 0);
-      |     ^~~~~~~~~~~~~~~~
-/home/mario/esp/esp-idf/components/freertos/FreeRTOS-Kernel/include/freertos/queue.h:726:50: note: expected 'const void * const' but argument is of type 'int'
-  726 |                               const void * const pvItemToQueue,
-      |                               ~~
-
- */
