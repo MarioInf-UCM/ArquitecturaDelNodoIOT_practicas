@@ -92,53 +92,13 @@ static void light_sleep_task(void *args){
         }
     }
 
+    printf("\n\n\n***Entramos en el modo Deep Sleep\n");  
+
+    uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
+    int64_t t_before_us = esp_timer_get_time();
+    esp_deep_sleep_start();
 
 
-    for(int i=0 ; i<NUM_TIMES_DEEP_SLEEP ; i++){
-        printf("\n\n\n***Entramos en el modo Deep Sleep\n");  
-
-        uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
-        int64_t t_before_us = esp_timer_get_time();
-        esp_deep_sleep(2000000);
-
-        
-        int64_t t_after_us = esp_timer_get_time();
-        const char* wakeup_reason;
-        switch (esp_sleep_get_wakeup_cause()) {
-            case ESP_SLEEP_WAKEUP_TIMER:
-                wakeup_reason = "timer";
-                break;
-            case ESP_SLEEP_WAKEUP_GPIO:
-                wakeup_reason = "pin";
-                break;
-            case ESP_SLEEP_WAKEUP_UART:
-                wakeup_reason = "uart";
-                vTaskDelay(1);
-                break;
-
-            #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-                case ESP_SLEEP_WAKEUP_TOUCHPAD:
-                    wakeup_reason = "touch";
-                    break;
-            #endif
-
-            default:
-                wakeup_reason = "other";
-                break;
-        }
-
-        #if CONFIG_NEWLIB_NANO_FORMAT
-            printf("Despertamos del modo Deep Sleep, motivo: %s, t=%d ms. Se ha dormido por %d ms\n",
-                    wakeup_reason, (int) (t_after_us / 1000), (int) ((t_after_us - t_before_us) / 1000));
-        #else
-            printf("Despertamos del modo Deep Sleep, motivo: %s, t=%lld ms. Se ha dormido por %lld ms\n",
-                    wakeup_reason, t_after_us / 1000, (t_after_us - t_before_us) / 1000);
-        #endif
-
-        if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO) {
-            example_wait_gpio_inactive();
-        }
-    }
 
 
     printf("Finalizando ejecución.\n");

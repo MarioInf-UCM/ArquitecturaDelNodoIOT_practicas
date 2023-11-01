@@ -265,6 +265,84 @@ Dicho esto, podemos sacar tres conclusiones del análisis:
 >
 >Modifica el código anterior para que, tras 5 pasos por ligth-sleep, pasemos a deep-sleep. Incluye código para determinar el motivo por el que hemos despertado de deep-sleep y muéstralo por pantalla.
 
+Para llevar a cabo el presente ejercicio hemos incluido una invocación al modo Deep Sleep una vez se ha llevado a cabo un total de 3 veces la salida del modo Light Sleep. En el siguiente cuadro podemos ver la sección en la que se declara dicha invocación:
+
+```C
+printf("\n\n\n***Entramos en el modo Deep Sleep\n");  
+
+uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
+int64_t t_before_us = esp_timer_get_time();
+esp_deep_sleep_start();
+```
+
+Una vez hecho esto, en el siguiente cuadro tenemos un ejemplo de la salida obtenida de la ejecución, donde podemos ver las diferentes impresiones periódicas de temperatura debido al timer y la entrada posterior al modo Deep Sleep:
+
+```BASH
+I (363) main_task: Calling app_main()
+I (363) gpio: GPIO[14]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 
+Waiting for GPIO14 to go high...
+I (373) gpio_wakeup: gpio wakeup source is ready
+I (383) timer_wakeup: timer wakeup source is ready
+I (383) uart: queue free spaces: 20
+I (403) uart_wakeup: uart wakeup source is ready
+Comenzamos a dormir después de la configuración inicial
+I (403) main_task: Returned from app_main()
+Timer de ejecución periódica. Tiempo: 2079866
+Finalizamos de dormir después de la configuración inicial
+*** Entramos en el modo Light Sleep ***
+Timer de ejecución periódica. Tiempo: 8085788
+Timer de ejecución periódica. Tiempo: 8086003
+Timer de ejecución periódica. Tiempo: 8086216
+*** Despertamos del modo Light Sleep (1), motivo: timer, t=8087 ms. Se ha dormido por 5001 ms ***
+
+*** Entramos en el modo Light Sleep ***
+Timer de ejecución periódica. Tiempo: 13109347
+Timer de ejecución periódica. Tiempo: 13109570
+*** Despertamos del modo Light Sleep (2), motivo: timer, t=13109 ms. Se ha dormido por 4998 ms ***
+
+*** Entramos en el modo Light Sleep ***
+Timer de ejecución periódica. Tiempo: 18130254
+Timer de ejecución periódica. Tiempo: 18130477
+Timer de ejecución periódica. Tiempo: 18130681
+*** Despertamos del modo Light Sleep (3), motivo: timer, t=18132 ms. Se ha dormido por 5001 ms ***
+
+
+
+
+***Entramos en el modo Deep Sleep
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7084
+ho 0 tail 12 room 4
+load:0x40078000,len:15584
+load:0x40080400,len:4
+0x40080400: _init at ??:?
+
+load:0x40080404,len:3872
+entry 0x4008064c
+I (31) boot: ESP-IDF v5.1.1-dirty 2nd stage bootloader
+```
+
+
+
+<br />
+
+>Cuestión
+>
+>¿Qué diferencia se observa al volver de deep-sleep respecto a volver de light-sleep?
+
+Como podemos observar en el cuadro anterior, tras la entrada en el modo Deep Sleep, cuando el timer de wakeup periódico salta, en lugar de continuar con la ejecución de la aplicación, se produce un reinicio completo del SoC. Esto es debido a que el modo Deep Sleep anula la tensión de entrada que recibe el procesador principal del SoC con el objetivo de reducir el consumo del mismo, lo cual provoca que no se pueda mantener el estado del sistema y cuando se intente despertar sea necesario reiniciar el sistema.
+
+Debemos tener en cuenta, que cuando se produce un reinicio debido a que el SoC se esta despertando del modo Deep Sleep, este se produce de una forma ordenada y queda registro del motivo por el cual se esta realizando, lo cual podemos ver en la primera línea de la salida anterior una vez se ha comenzado el proceso de reinicio:
+
+```BASH
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+```
+
 
 <br />
 
@@ -410,8 +488,6 @@ I (15670) MOCK_WIFI: Wifi Connected
 I (15670) MAIN: WIFI CONNECTED
 I (15670) MAIN: Temperatura: 23.828394
 I (15670) MAIN: Humedad: 54.474396
-I (15670) MOCK_WIFI: Error sending data, invalid state -> CONNECTED
-I (15680) MOCK_WIFI: Error sending data, invalid state -> CONNECTED
 I (15680) MAIN: Preparándose para entrar en modo Light Sleep.
 I (15690) MOCK_WIFI: Wifi Disconnected, call wifi_connect() to reconnect
 I (15700) MAIN: Entrando en modo Light Sleep.
