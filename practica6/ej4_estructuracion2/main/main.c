@@ -9,6 +9,8 @@
 #include "esp_flash.h"
 #include "esp_system.h"
 #include "esp_pm.h"
+#include "esp_sleep.h"
+#include "driver/uart.h"
 
 #include "mock_wifi.h"
 #include "temperatureMonitor.h"
@@ -18,6 +20,9 @@
 #include "esp_event_base.h"
 
 static const char *TAG = "MAIN";
+#define TIME_TO_DEEP_SLEEP 1 * 60 * 1000000         // Espera de 1 minuto
+//#define TIME_TO_DEEP_SLEEP 12 * 3600 * 1000000    // Espera de 12 horas
+
 
 // Event loops
 esp_event_loop_handle_t loop_wifi_mock;
@@ -29,6 +34,8 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
 static void task_mock_wifi_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
 static void task_monitor_gpio_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
 static void task_console_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
+static void deepSleep_event_handler();
+
 
 // Send data when connected
 bool send_data = 0;
@@ -40,13 +47,15 @@ enum state
     CONSOLE
 };
 enum state current_state = MONITOR;
+esp_timer_handle_t deepSleep_timer;
 
 void app_main()
 {
   
-    ESP_LOGI(TAG, "Comenzando inicialización de componentes.");
+    ESP_LOGI(TAG, "Comenzando el proceso de inicialización.");
     esp_err_t result;
 
+    // Configuración del Power Manager
     esp_pm_config_t pmConfig = {
         .max_freq_mhz = 240,
         .min_freq_mhz = 10,
@@ -54,9 +63,29 @@ void app_main()
     };
     result = esp_pm_configure(&pmConfig);
     if (result != ESP_OK){
-        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo configurar adecuadamente el Power Manager", esp_err_to_name(result));
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo configurar adecuadamente el Power Manager.", esp_err_to_name(result));
         vTaskDelete(NULL);
     }
+    ESP_LOGI(TAG, "El Power Manager ha sido configurado adecuadamente.");
+
+
+    //Configuración del evento de entrada al modo Deep Sleep
+    const esp_timer_create_args_t deepSleep_timer_args = {
+        .callback = &deepSleep_event_handler,
+        .name = "temperature"};
+
+    result = esp_timer_create(&deepSleep_timer_args, &deepSleep_timer);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo crear el timer para la entrada en el Deep Sleep.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+    
+    result = esp_timer_start_periodic(deepSleep_timer, TIME_TO_DEEP_SLEEP);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo activar el timer para acceso al Deep Sleep.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "El timer de acceso al modo Deep Sleep ha sido configurado adecuadamente.");
 
     //*************************************************************
     // Inicialización del comoponentes Mock WIFI - INICIO
@@ -141,8 +170,24 @@ void app_main()
     // Inicialización del comoponentes Consola - FIN
     //*************************************************************
 
+    ESP_LOGI(TAG, "Proceso de inicialización finalizado con éxito.\n");
     vTaskDelete(NULL);
 }
+
+
+
+static void deepSleep_event_handler(){
+    ESP_LOGI(TAG, "Entrando en el modo Deep Sleep.\n");  
+    wifi_disconnect();
+    circularBuffer_destroy();
+    TemperatureMonitor_stop();
+    monitor_gpio_stop();
+    aniot_console_stop();
+    uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
+    esp_deep_sleep_start();
+}
+
+
 
 static void task_mock_wifi_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
@@ -176,6 +221,8 @@ static void task_mock_wifi_handler(void *handler_args, esp_event_base_t base, in
         break;
     }
 }
+
+
 
 static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs)
 {
@@ -217,6 +264,8 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
     }
     return;
 }
+
+
 
 static void task_monitor_gpio_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {

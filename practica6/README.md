@@ -529,8 +529,66 @@ Una vez se ha llevado a cabo la configuración correctamente y se ejecuta la apl
 
 ```BASH
 I (404) main_task: Calling app_main()
-I (404) MAIN: Comenzando inicialización de componentes.
 I (404) pm: Frequency switching config: CPU_MAX: 240, APB_MAX: 240, APB_MIN: 10, Light sleep: ENABLED
+I (404) MAIN: Comenzando inicialización de componentes.
 ```
 
 ### Paso 2 - Entrada en el modo Deep Sleep
+
+Para la realización del segundo paso deberemos definir una variable global donde indiquemos el tiempo que transcurrirá entre cada entrada del SoC al modo Deep Sleep. Teniendo en cuenta lo que indica el enunciado, hemos creado dos definiciones para dicha variable, la primera con una duración de 1 minuto y la segunda con 12 horas. En el siguiente cuadro podemos ver dichas variables que se encuentran en el fichero **main.c**.
+
+```C
+#define TIME_TO_DEEP_SLEEP 1 * 60 * 1000000         // Espera de 1 minuto
+//#define TIME_TO_DEEP_SLEEP 12 * 3600 * 1000000    // Espera de 12 horas
+```
+
+Posteriormente crearemos y configuraremos el timer que necesitamos para poder controlar el acceso al modo Deep Sleep, lo cual se realizará en la función **app_main()** durante el proceso de inicialización. En el siguiente cuadro podemos ver dicha sección dle código:
+
+```C
+    //Configuración del evento de entrada al modo Deep Sleep
+    const esp_timer_create_args_t deepSleep_timer_args = {
+        .callback = &deepSleep_event_handler,
+        .name = "temperature"};
+
+    result = esp_timer_create(&deepSleep_timer_args, &deepSleep_timer);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo crear el timer para la entrada en el Deep Sleep.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+    
+    result = esp_timer_start_periodic(deepSleep_timer, TIME_TO_DEEP_SLEEP);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo activar el timer para acceso al Deep Sleep.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "El timer de acceso al modo Deep Sleep ha sido configurado adecuadamente.");
+```
+
+Por otra parte, la función encargada de ejecutarse cuando el timer es lanzado debe desconectar tanto el módulo WIFI como pasar los diferentes componentes que fueron configurados inicialmente con el objetivo de que la aplicación despierte cuando el timer vuelva a ser ejecutado y no antes. A continuación podemos ver la definición de dicha función:
+
+```C
+static void deepSleep_event_handler(){
+    ESP_LOGI(TAG, "Entrando en el modo Deep Sleep.\n");  
+    wifi_disconnect();
+    TemperatureMonitor_stop();
+    monitor_gpio_stop();
+    circularBuffer_destroy();
+    aniot_console_stop();
+    uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
+    esp_deep_sleep_start();
+}
+```
+
+Para finalizar, si ejecutamos la aplicación y esperamos el tiempo especificado en el timer, podemos ver como esta entra en el modo Deep Sleep y cuando se vuelve a producir el lanzamiento del timer, esta vuelve a despertar.
+
+```BASH
+I (57515) MOCK_WIFI: Data '24.536249' sent successfully
+I (57615) MAIN: Humedad: 54.985565
+I (57615) MOCK_WIFI: Data '54.985565' sent successfully
+I (60405) MAIN: Entrando en el modo Deep Sleep.
+
+I (60405) MOCK_WIFI: Wifi Disconnected, call wifi_connect() to reconnect
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+```
