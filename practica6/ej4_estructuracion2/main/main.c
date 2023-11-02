@@ -11,6 +11,7 @@
 #include "esp_pm.h"
 #include "esp_sleep.h"
 #include "driver/uart.h"
+#include "nvs_flash.h"
 
 #include "mock_wifi.h"
 #include "temperatureMonitor.h"
@@ -20,7 +21,7 @@
 #include "esp_event_base.h"
 
 static const char *TAG = "MAIN";
-#define TIME_TO_DEEP_SLEEP 1 * 60 * 1000000         // Espera de 1 minuto
+#define TIME_TO_DEEP_SLEEP 30 * 1000000         // Espera de 1 minuto
 //#define TIME_TO_DEEP_SLEEP 12 * 3600 * 1000000    // Espera de 12 horas
 
 
@@ -46,14 +47,71 @@ enum state
     MONITOR,
     CONSOLE
 };
+
+static const char * esp_sleep_source_types[] = {
+    [ESP_SLEEP_WAKEUP_UNDEFINED] = "ESP_SLEEP_WAKEUP_UNDEFINED",                //!< In case of deep sleep, reset was not caused by exit from deep sleep
+    [ESP_SLEEP_WAKEUP_ALL] = "ESP_SLEEP_WAKEUP_ALL",                            //!< Not a wakeup cause, used to disable all wakeup sources with esp_sleep_disable_wakeup_source
+    [ESP_SLEEP_WAKEUP_EXT0] = "ESP_SLEEP_WAKEUP_EXT0",                          //!< Wakeup caused by external signal using RTC_IO
+    [ESP_SLEEP_WAKEUP_EXT1] = "ESP_SLEEP_WAKEUP_EXT1",                          //!< Wakeup caused by external signal using RTC_CNTL
+    [ESP_SLEEP_WAKEUP_TIMER] = "ESP_SLEEP_WAKEUP_TIMER",                        //!< Wakeup caused by timer
+    [ESP_SLEEP_WAKEUP_TOUCHPAD] = "ESP_SLEEP_WAKEUP_TOUCHPAD",                  //!< Wakeup caused by touchpad
+    [ESP_SLEEP_WAKEUP_ULP] = "ESP_SLEEP_WAKEUP_ULP",                            //!< Wakeup caused by ULP program
+    [ESP_SLEEP_WAKEUP_GPIO] = "ESP_SLEEP_WAKEUP_GPIO",                          //!< Wakeup caused by GPIO (light sleep only on ESP32, S2 and S3)
+    [ESP_SLEEP_WAKEUP_UART] = "ESP_SLEEP_WAKEUP_UART",                          //!< Wakeup caused by UART (light sleep only)
+    [ESP_SLEEP_WAKEUP_WIFI] = "ESP_SLEEP_WAKEUP_WIFI",                          //!< Wakeup caused by WIFI (light sleep only)
+    [ESP_SLEEP_WAKEUP_COCPU] = "ESP_SLEEP_WAKEUP_COCPU",                        //!< Wakeup caused by COCPU int
+    [ESP_SLEEP_WAKEUP_COCPU_TRAP_TRIG] = "ESP_SLEEP_WAKEUP_COCPU_TRAP_TRIG",    //!< Wakeup caused by COCPU crash
+    [ESP_SLEEP_WAKEUP_BT] = "ESP_SLEEP_WAKEUP_BT",                              //!< Wakeup caused by BT (light sleep only)
+};
+
 enum state current_state = MONITOR;
 esp_timer_handle_t deepSleep_timer;
+static nvs_handle_t nvs_handle_custom;
 
-void app_main()
-{
+
+void app_main(){
   
-    ESP_LOGI(TAG, "Comenzando el proceso de inicialización.");
     esp_err_t result;
+    esp_sleep_wakeup_cause_t wakeupCause;
+    
+
+    wakeupCause = esp_sleep_get_wakeup_cause();
+    ESP_LOGI(TAG, "Motivo del reinicio (%d): %s.",wakeupCause, esp_sleep_source_types[wakeupCause]);
+    ESP_LOGI(TAG, "Comenzando el proceso de inicialización.");
+
+    // Configuración del NVS
+    result = nvs_flash_init();
+    while(result == ESP_ERR_NVS_NO_FREE_PAGES || result == ESP_ERR_NVS_NEW_VERSION_FOUND){
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        result = nvs_flash_init();
+    }
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo inicializar adecuadamente el NVS.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+
+    result = nvs_open("storage", NVS_READWRITE, &nvs_handle_custom);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo abrir el almacenamiento NVS.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+
+    result = nvs_set_u8(nvs_handle_custom, "resetReason", (uint8_t) wakeupCause);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+    nvs_commit(nvs_handle_custom);
+
+    uint8_t resetReason_value;
+    result = nvs_get_u8(nvs_handle_custom, "resetReason", &resetReason_value);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al intentar obtener el valor de reinicio almacenado en el NVS.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+
+    ESP_LOGI(TAG, "Nuevo valor almacenado en el NVS. Motivo de reinicio (%d)..: %s.", resetReason_value, esp_sleep_source_types[resetReason_value]);
+
 
     // Configuración del Power Manager
     esp_pm_config_t pmConfig = {
@@ -86,6 +144,9 @@ void app_main()
         vTaskDelete(NULL);
     }
     ESP_LOGI(TAG, "El timer de acceso al modo Deep Sleep ha sido configurado adecuadamente.");
+
+
+
 
     //*************************************************************
     // Inicialización del comoponentes Mock WIFI - INICIO
@@ -166,6 +227,10 @@ void app_main()
     if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo registrar la manejadora del evento MONITOR_GPIO - MONITOR_GPIO_BUTTON_PRESSED.");
         vTaskDelete(NULL);
+    }    result = nvs_set_str(nvs_handle_custom, "resetReason", esp_sleep_source_types[wakeupCause]);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
+        vTaskDelete(NULL);
     }
     // Inicialización del comoponentes Consola - FIN
     //*************************************************************
@@ -177,12 +242,15 @@ void app_main()
 
 
 static void deepSleep_event_handler(){
-    ESP_LOGI(TAG, "Entrando en el modo Deep Sleep.\n");  
     wifi_disconnect();
     circularBuffer_destroy();
     TemperatureMonitor_stop();
     monitor_gpio_stop();
     aniot_console_stop();
+    nvs_commit(nvs_handle_custom);
+    nvs_close(nvs_handle_custom);
+    ESP_LOGI(TAG, "Entrando en el modo Deep Sleep.\n");  
+
     uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
     esp_deep_sleep_start();
 }

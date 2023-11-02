@@ -592,3 +592,53 @@ ets Jun  8 2016 00:22:57
 
 rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
 ```
+
+
+
+<br />
+
+### PASO 3 - Comprobar el motivo del reinicio y guardarlo en la NVS
+
+
+
+```C
+// Configuración del NVS
+result = nvs_flash_init();
+while(result == ESP_ERR_NVS_NO_FREE_PAGES || result == ESP_ERR_NVS_NEW_VERSION_FOUND){
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    result = nvs_flash_init();
+}
+if (result != ESP_OK){
+    ESP_LOGE(TAG, "ERROR (%s)..: No se pudo inicializar adecuadamente el NVS.", esp_err_to_name(result));
+    vTaskDelete(NULL);
+}
+
+result = nvs_open("storage", NVS_READWRITE, &nvs_handle);
+if (result != ESP_OK) {
+    ESP_LOGE(TAG, "ERROR (%s)..: No se pudo abrir el almacenamiento NVS.", esp_err_to_name(result));
+    vTaskDelete(NULL);
+}
+```
+
+```BASH
+mI (399) main_task: Started on CPU0
+I (409) main_task: Calling app_main()
+I (409) MAIN: Motivo del reinicio: ESP_SLEEP_WAKEUP_UNDEFINED
+I (409) MAIN: Comenzando el proceso de inicialización.
+.
+.
+.
+I (60391) MAIN: Entrando en el modo Deep Sleep.
+I (60391) MOCK_WIFI: Wifi Disconnected, call wifi_connect() to reconnect
+I (60391) BUFFER: Buffer correctamente eliminado.
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+.
+.
+.
+mI (401) main_task: Started on CPU0
+I (411) main_task: Calling app_main()
+I (411) MAIN: Motivo del reinicio: ESP_SLEEP_WAKEUP_TIMER
+I (411) MAIN: Comenzando el proceso de inicialización.
+```
