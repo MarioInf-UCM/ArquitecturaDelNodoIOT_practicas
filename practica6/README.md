@@ -564,16 +564,36 @@ Posteriormente crearemos y configuraremos el timer que necesitamos para poder co
     ESP_LOGI(TAG, "El timer de acceso al modo Deep Sleep ha sido configurado adecuadamente.");
 ```
 
-Por otra parte, la función encargada de ejecutarse cuando el timer es lanzado debe desconectar tanto el módulo WIFI como pasar los diferentes componentes que fueron configurados inicialmente con el objetivo de que la aplicación despierte cuando el timer vuelva a ser ejecutado y no antes. A continuación podemos ver la definición de dicha función:
+Por otra parte, la función encargada de ejecutarse cuando el timer es lanzado debe desconectar tanto el módulo WIFI como pausar los diferentes componentes que fueron configurados inicialmente con el objetivo de que la aplicación despierte cuando el timer vuelva a ser ejecutado y no antes. Además, también necesitaremos crear un timer específico de wakeup que despierte al SoC tras haber pasado el tiempo ue se considera oportuno. A continuación podemos ver la definición de dicha función:
 
 ```C
 static void deepSleep_event_handler(){
-    ESP_LOGI(TAG, "Entrando en el modo Deep Sleep.\n");  
+
+    int32_t lastValue;
+    esp_err_t result;
+
+    ESP_LOGI(TAG, "Tiempo de funcionamiento finalizado, preparandose para entrar en el modo Deep Sleep.");  
+ 
+    result = esp_sleep_enable_timer_wakeup(TIME_TO_DEEP_SLEEP);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo activar el timer para despertar del modo Deep Sleep.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "El timer para despertar del modo Deep Sleep ha sido configurado adecuadamente.");
+ 
     wifi_disconnect();
+    circularBuffer_destroy();
     TemperatureMonitor_stop();
     monitor_gpio_stop();
-    circularBuffer_destroy();
     aniot_console_stop();
+    nvs_commit(nvs_handle_custom);
+    .
+    .
+    .
+    nvs_close(nvs_handle_custom);
+    
+    ESP_LOGI(TAG, "Entrando en el modo Deep Sleep.\n");  
+
     uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
     esp_deep_sleep_start();
 }
@@ -582,12 +602,15 @@ static void deepSleep_event_handler(){
 Para finalizar, si ejecutamos la aplicación y esperamos el tiempo especificado en el timer, podemos ver como esta entra en el modo Deep Sleep y cuando se vuelve a producir el lanzamiento del timer, esta vuelve a despertar.
 
 ```BASH
-I (57515) MOCK_WIFI: Data '24.536249' sent successfully
-I (57615) MAIN: Humedad: 54.985565
-I (57615) MOCK_WIFI: Data '54.985565' sent successfully
-I (60405) MAIN: Entrando en el modo Deep Sleep.
+I (30441) MAIN: Tiempo de funcionamiento finalizado, preparandose para entrar en el modo Deep Sleep.
+I (30441) MAIN: El timer para despertar del modo Deep Sleep ha sido configurado adecuadamente.
+I (30441) MOCK_WIFI: Wifi Disconnected, call wifi_connect() to reconnect
+I (30451) BUFFER: Buffer correctamente eliminado.
+.
+.
+.
+I (30471) MAIN: Entrando en el modo Deep Sleep.
 
-I (60405) MOCK_WIFI: Wifi Disconnected, call wifi_connect() to reconnect
 ets Jun  8 2016 00:22:57
 
 rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
@@ -675,8 +698,66 @@ I (411) MAIN: Motivo del reinicio: ESP_SLEEP_WAKEUP_TIMER
 I (411) MAIN: Comenzando el proceso de inicialización.
 ```
 
-
-
 <br />
 
 ### PASO 4 - Guardado de las últimas lecturas de temperatura y humedad
+
+Para la realización del último paso necesitaremos realizar inserciones en la sección NVS cada vez que llevemos a cabo la lectura de la temperatura o la humedad, dejando siempre prevalecer el último valor obtenido. Para esto necesitaremos haber inicializado previamente el módulo NVS, y la ejecución de las funciones **nvs_set_i32()** lo llevaremos a cabo dentro de la función encargada de manejar los eventos producidos cada vez que se realiza una lectura de temperatura o humedad. En el siguiente cuadro podemos ver dicho fragmento de código.
+
+```C
+data = *(float *)eventArgs;
+if (idEvent == TEMPERATURE_READED_EVENT){
+    ESP_LOGI(TAG, "Temperatura: %f", data);
+    result = nvs_set_i32(nvs_handle_custom, "lastTemperature", (int32_t) data);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar la última temperatura leída.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+}else if (idEvent == HUMIDITY_READED_EVENT){
+    ESP_LOGI(TAG, "Humedad: %f", data);
+    result = nvs_set_i32(nvs_handle_custom, "lastHumidity", (int32_t) data);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+    }else{
+    ESP_LOGE(TAG, "ERROR..: ID del evento desconocida");
+    return;
+}
+```
+
+Por otra parte, para poder visualizar los últimos valores guardados se ha llevado a cabo la obtención de los mismos mediante las funciones **nvs_get_i32()** dentro de la función encargada de gestionar la entrada al modo Deep Sleep. Antes de esto debemos ejecutar la función **nvs_commit()** para asegurarnos de que los datos ya se encuentran correctamente almacenados en la sección NVS.
+
+```C
+    result = nvs_commit(nvs_handle_custom);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo realizar el commit porterior a la introducción dle motivo de reinicio.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+
+    result = nvs_get_i32(nvs_handle_custom, "lastTemperature", &lastValue);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al intentar obtener el último valor de temperatura almacenado en el NVS.", esp_err_to_name(result));
+        //vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "Último valor de temperatura almacenado en el NVS..: %f.", (float) lastValue);
+
+    result = nvs_get_i32(nvs_handle_custom, "lastHumidity", &lastValue);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al intentar obtener el último valor de humedad almacenado en el NVS.", esp_err_to_name(result));
+        //vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "Último valor de humedad almacenado en el NVS..: %f.", (float) lastValue);
+```
+
+A continuación tenemos el fragmento correspondiente a la salida obtenida al ejecutar la aplicación:
+
+```BASH
+I (30461) MAIN: Último valor de temperatura almacenado en el NVS..: 22.000000.
+I (30471) MAIN: Último valor de humedad almacenado en el NVS..: 46.000000.
+I (30471) MAIN: Entrando en el modo Deep Sleep.
+
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+```

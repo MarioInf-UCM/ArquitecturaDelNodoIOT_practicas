@@ -101,13 +101,13 @@ void app_main(){
         ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
         vTaskDelete(NULL);
     }
-
+    /*
     result = nvs_commit(nvs_handle_custom);
     if (result != ESP_OK) {
         ESP_LOGE(TAG, "ERROR (%s)..: No se pudo realizar el commit porterior a la introducción dle motivo de reinicio.", esp_err_to_name(result));
         vTaskDelete(NULL);
     }
-
+    
     uint8_t resetReason_value;
     result = nvs_get_u8(nvs_handle_custom, "resetReason", &resetReason_value);
     if (result != ESP_OK) {
@@ -116,7 +116,7 @@ void app_main(){
     }
 
     ESP_LOGI(TAG, "Nuevo valor almacenado en el NVS. Motivo de reinicio (%d)..: %s.", resetReason_value, esp_sleep_source_types[resetReason_value]);
-
+    */
 
     // Configuración del Power Manager
     esp_pm_config_t pmConfig = {
@@ -133,7 +133,7 @@ void app_main(){
 
 
     //Configuración del evento de entrada al modo Deep Sleep
-    const esp_timer_create_args_t deepSleep_timer_args = {
+     const esp_timer_create_args_t deepSleep_timer_args = {
         .callback = &deepSleep_event_handler,
         .name = "deepSleep_event"};
 
@@ -148,8 +148,8 @@ void app_main(){
         ESP_LOGE(TAG, "ERROR (%s)..: No se pudo activar el timer para acceso al Deep Sleep.", esp_err_to_name(result));
         vTaskDelete(NULL);
     }
-    ESP_LOGI(TAG, "El timer de acceso al modo Deep Sleep ha sido configurado adecuadamente.");
 
+    ESP_LOGI(TAG, "El timer de acceso al modo Deep Sleep ha sido configurado adecuadamente.");
 
 
 
@@ -252,12 +252,26 @@ static void deepSleep_event_handler(){
     esp_err_t result;
 
     ESP_LOGI(TAG, "Tiempo de funcionamiento finalizado, preparandose para entrar en el modo Deep Sleep.");  
+ 
+    result = esp_sleep_enable_timer_wakeup(TIME_TO_DEEP_SLEEP);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo activar el timer para despertar del modo Deep Sleep.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "El timer para despertar del modo Deep Sleep ha sido configurado adecuadamente.");
+ 
     wifi_disconnect();
     circularBuffer_destroy();
     TemperatureMonitor_stop();
     monitor_gpio_stop();
     aniot_console_stop();
     nvs_commit(nvs_handle_custom);
+
+    result = nvs_commit(nvs_handle_custom);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo realizar el commit porterior a la introducción dle motivo de reinicio.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
 
     result = nvs_get_i32(nvs_handle_custom, "lastTemperature", &lastValue);
     if (result != ESP_OK) {
@@ -272,8 +286,8 @@ static void deepSleep_event_handler(){
         //vTaskDelete(NULL);
     }
     ESP_LOGI(TAG, "Último valor de humedad almacenado en el NVS..: %f.", (float) lastValue);
-
     nvs_close(nvs_handle_custom);
+    
     ESP_LOGI(TAG, "Entrando en el modo Deep Sleep.\n");  
 
     uart_wait_tx_idle_polling(CONFIG_ESP_CONSOLE_UART_NUM);
@@ -335,8 +349,6 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
             ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar la última temperatura leida.", esp_err_to_name(result));
             vTaskDelete(NULL);
         }
-
-
     }else if (idEvent == HUMIDITY_READED_EVENT){
         ESP_LOGI(TAG, "Humedad: %f", data);
         result = nvs_set_i32(nvs_handle_custom, "lastHumidity", (int32_t) data);
@@ -344,12 +356,11 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
             ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
             vTaskDelete(NULL);
         }
-    
      }else{
         ESP_LOGE(TAG, "ERROR..: ID del evento desconocida");
         return;
     }
-/*
+
     if (send_data == 1){
         while (getDataLeft() > 0){
             float pendingData;
@@ -359,7 +370,7 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
         send_data_wifi(&data, sizeof(data));
     }else{
         writeToFlash(&data, sizeof(data));
-    } */
+    }
 
     return;
 }
