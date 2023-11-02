@@ -101,13 +101,18 @@ void app_main(){
         ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
         vTaskDelete(NULL);
     }
-    nvs_commit(nvs_handle_custom);
+
+    result = nvs_commit(nvs_handle_custom);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: No se pudo realizar el commit porterior a la introducción dle motivo de reinicio.", esp_err_to_name(result));
+        vTaskDelete(NULL);
+    }
 
     uint8_t resetReason_value;
     result = nvs_get_u8(nvs_handle_custom, "resetReason", &resetReason_value);
     if (result != ESP_OK) {
         ESP_LOGE(TAG, "ERROR (%s)..: Error al intentar obtener el valor de reinicio almacenado en el NVS.", esp_err_to_name(result));
-        vTaskDelete(NULL);
+        //vTaskDelete(NULL);
     }
 
     ESP_LOGI(TAG, "Nuevo valor almacenado en el NVS. Motivo de reinicio (%d)..: %s.", resetReason_value, esp_sleep_source_types[resetReason_value]);
@@ -242,12 +247,32 @@ void app_main(){
 
 
 static void deepSleep_event_handler(){
+
+    int32_t lastValue;
+    esp_err_t result;
+
+    ESP_LOGI(TAG, "Tiempo de funcionamiento tinalizado, preparandose para entrar en el modo Deep Sleep.");  
     wifi_disconnect();
     circularBuffer_destroy();
     TemperatureMonitor_stop();
     monitor_gpio_stop();
     aniot_console_stop();
     nvs_commit(nvs_handle_custom);
+
+    result = nvs_get_i32(nvs_handle_custom, "lastTemperature", &lastValue);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al intentar obtener el último valor de temperatura almacenado en el NVS.", esp_err_to_name(result));
+        //vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "Último valor de temperatura almacenado en el NVS..: %f.", (float) lastValue);
+
+    result = nvs_get_i32(nvs_handle_custom, "lastHumidity", &lastValue);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "ERROR (%s)..: Error al intentar obtener el último valor de humedad almacenado en el NVS.", esp_err_to_name(result));
+        //vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "Último valor de humedad almacenado en el NVS..: %f.", (float) lastValue);
+
     nvs_close(nvs_handle_custom);
     ESP_LOGI(TAG, "Entrando en el modo Deep Sleep.\n");  
 
@@ -292,8 +317,9 @@ static void task_mock_wifi_handler(void *handler_args, esp_event_base_t base, in
 
 
 
-static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs)
-{
+static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseEvent, int32_t idEvent, void *eventArgs){
+
+    esp_err_t result;
     float data = 0.0f;
     if (baseEvent != TEMPERATURE_MONITOR_EVENTS)
     {
@@ -302,34 +328,39 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
     }
 
     data = *(float *)eventArgs;
-    if (idEvent == TEMPERATURE_READED_EVENT)
-    {
+    if (idEvent == TEMPERATURE_READED_EVENT){
         ESP_LOGI(TAG, "Temperatura: %f", data);
-    }
-    else if (idEvent == HUMIDITY_READED_EVENT)
-    {
+        result = nvs_set_i32(nvs_handle_custom, "lastTemperature", (int32_t) data);
+        if (result != ESP_OK) {
+            ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar la última temperatura leida.", esp_err_to_name(result));
+            vTaskDelete(NULL);
+        }
+
+
+    }else if (idEvent == HUMIDITY_READED_EVENT){
         ESP_LOGI(TAG, "Humedad: %f", data);
-    }
-    else
-    {
+        result = nvs_set_i32(nvs_handle_custom, "lastHumidity", (int32_t) data);
+        if (result != ESP_OK) {
+            ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
+            vTaskDelete(NULL);
+        }
+
+    }else{
         ESP_LOGE(TAG, "ERROR..: ID del evento desconocida");
         return;
     }
 
-    if (send_data == 1)
-    {
-        while (getDataLeft() > 0)
-        {
+    if (send_data == 1){
+        while (getDataLeft() > 0){
             float pendingData;
             pendingData = *(float *)readFromFlash(sizeof(float));
             send_data_wifi(&pendingData, sizeof(pendingData));
         }
         send_data_wifi(&data, sizeof(data));
-    }
-    else
-    {
+    }else{
         writeToFlash(&data, sizeof(data));
     }
+
     return;
 }
 
