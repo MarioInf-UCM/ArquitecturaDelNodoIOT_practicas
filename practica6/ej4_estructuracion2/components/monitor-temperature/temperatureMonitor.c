@@ -115,6 +115,33 @@ esp_err_t TemperatureMonitor_stop()
     return ESP_OK;
 }
 
+esp_err_t TemperatureMonitor_deleteTimers()
+{
+    esp_err_t result;
+    result = esp_timer_stop(temperature_timer);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR..: No se pudo parar el timer de lectura de la temperatura.");
+        return result;
+    }
+    result = esp_timer_delete(temperature_timer);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR..: No se pudo eliminar el timer de lectura de la temperatura.");
+        return result;
+    }
+    result = esp_timer_stop(humidity_timer);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR..: No se pudo parar el timer de lectura de la humedad.");
+        return result;
+    }
+    result = esp_timer_delete(humidity_timer);
+    if (result != ESP_OK){
+        ESP_LOGE(TAG, "ERROR..: No se pudo eliminar el timer de lectura de la humedad.");
+        return result;
+    }
+
+    return ESP_OK;
+}
+
 esp_err_t TemperatureMonitor_start()
 {
     esp_timer_start_periodic(temperature_timer, us_read_period);

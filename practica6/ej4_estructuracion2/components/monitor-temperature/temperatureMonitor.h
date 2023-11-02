@@ -31,6 +31,7 @@ enum
 esp_event_loop_handle_t TemperatureMonitor_init();
 esp_err_t TemperatureMonitor_readTemperature();
 esp_err_t TemperatureMonitor_readHumidity();
+esp_err_t TemperatureMonitor_deleteTimers();
 esp_err_t TemperatureMonitor_stop();
 esp_err_t TemperatureMonitor_start();
 

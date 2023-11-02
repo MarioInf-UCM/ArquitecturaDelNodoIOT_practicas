@@ -599,7 +599,7 @@ rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
 
 ### PASO 3 - Comprobar el motivo del reinicio y guardarlo en la NVS
 
-
+Para poder llevar a cabo este paso necesitaremos inicializar el módulo NVS, abriendo en el mismo un almacenamiento donde poder guardar nuestras claves par-valor. Esto lo llevaremos a cabo al principio de la función **app_main()** y para ello utilizaremos las funciones **nvs_flash_init()** y **nvs_open()** respectivamente. En el siguiente cuadro podemos ver dicho fragmento de código:
 
 ```C
 // Configuración del NVS
@@ -613,12 +613,44 @@ if (result != ESP_OK){
     vTaskDelete(NULL);
 }
 
-result = nvs_open("storage", NVS_READWRITE, &nvs_handle);
+result = nvs_open("storage", NVS_READWRITE, &nvs_handle_custom);
 if (result != ESP_OK) {
     ESP_LOGE(TAG, "ERROR (%s)..: No se pudo abrir el almacenamiento NVS.", esp_err_to_name(result));
     vTaskDelete(NULL);
 }
+
 ```
+
+Por otra parte, una vz hemos realizado la inicialización del módulo NVS guardaremos sobre el mismo la información referente al motivo del reinicio del sistema, el cual obtenemos mediante la función **esp_sleep_get_wakeup_cause()**. Para comprobar el correcto guardado, realizaremos posteriormente una obtención de dicho valor y los imprimiremos por pantalla, para lo cual necesitaremos asegurarnos primero que se ha completado dicha escritura mediante la función **nvs_commit()**. En el siguiente cuadro de texto podemos ver dicho fragmento de código:
+
+```C
+wakeupCause = esp_sleep_get_wakeup_cause();
+.
+.
+.
+result = nvs_set_u8(nvs_handle_custom, "resetReason", (uint8_t) wakeupCause);
+if (result != ESP_OK) {
+    ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
+    vTaskDelete(NULL);
+}
+
+result = nvs_commit(nvs_handle_custom);
+if (result != ESP_OK) {
+    ESP_LOGE(TAG, "ERROR (%s)..: No se pudo realizar el commit porterior a la introducción dle motivo de reinicio.", esp_err_to_name(result));
+    vTaskDelete(NULL);
+}
+
+uint8_t resetReason_value;
+result = nvs_get_u8(nvs_handle_custom, "resetReason", &resetReason_value);
+if (result != ESP_OK) {
+    ESP_LOGE(TAG, "ERROR (%s)..: Error al intentar obtener el valor de reinicio almacenado en el NVS.", esp_err_to_name(result));
+    //vTaskDelete(NULL);
+}
+
+ESP_LOGI(TAG, "Nuevo valor almacenado en el NVS. Motivo de reinicio (%d)..: %s.", resetReason_value, esp_sleep_source_types[resetReason_value]);
+```
+
+Una vez realizado esto ya tendremos el guardado en memoria del motivo de cada uno de los reinicios del sistema. En el siguiente cuadro podemos ver la información relevante al respecto de la ejecución de la aplicación:
 
 ```BASH
 mI (399) main_task: Started on CPU0
@@ -642,3 +674,9 @@ I (411) main_task: Calling app_main()
 I (411) MAIN: Motivo del reinicio: ESP_SLEEP_WAKEUP_TIMER
 I (411) MAIN: Comenzando el proceso de inicialización.
 ```
+
+
+
+<br />
+
+### PASO 4 - Guardado de las últimas lecturas de temperatura y humedad

@@ -135,7 +135,7 @@ void app_main(){
     //Configuración del evento de entrada al modo Deep Sleep
     const esp_timer_create_args_t deepSleep_timer_args = {
         .callback = &deepSleep_event_handler,
-        .name = "temperature"};
+        .name = "deepSleep_event"};
 
     result = esp_timer_create(&deepSleep_timer_args, &deepSleep_timer);
     if (result != ESP_OK){
@@ -175,8 +175,8 @@ void app_main(){
     }
 
     wifi_connect();
-    // Inicialización del comoponentes Mock WIFI - FIN
-    //*************************************************************
+   // Inicialización del comoponentes Mock WIFI - FIN
+   //*************************************************************
 
 
     //*************************************************************
@@ -202,12 +202,12 @@ void app_main(){
 
     //*************************************************************
     // Inicialización del comoponentes Mock Flas - INICIO
-     result = circularBuffer_init(100);
+    result = circularBuffer_init(100);
     if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo inicializar el buffer de memoria flash");
         vTaskDelete(NULL);
     }
-    // Inicialización del comoponentes Mock Flas - FIN
+   // Inicialización del comoponentes Mock Flas - FIN
     //*************************************************************
 
 
@@ -226,7 +226,7 @@ void app_main(){
 
     //*************************************************************
     // Inicialización del comoponentes Consola - INICIO
-     loop_console = aniot_console_init();
+    loop_console = aniot_console_init();
 
     esp_event_handler_register_with(loop_console, ANIOT_CONSOLE_EVENT, CMD_MONITOR_EVENT, task_console_handler, loop_console);
     if (result != ESP_OK){
@@ -251,7 +251,7 @@ static void deepSleep_event_handler(){
     int32_t lastValue;
     esp_err_t result;
 
-    ESP_LOGI(TAG, "Tiempo de funcionamiento tinalizado, preparandose para entrar en el modo Deep Sleep.");  
+    ESP_LOGI(TAG, "Tiempo de funcionamiento finalizado, preparandose para entrar en el modo Deep Sleep.");  
     wifi_disconnect();
     circularBuffer_destroy();
     TemperatureMonitor_stop();
@@ -344,12 +344,12 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
             ESP_LOGE(TAG, "ERROR (%s)..: Error al guardar el motivo de reinicio en el NVS.", esp_err_to_name(result));
             vTaskDelete(NULL);
         }
-
-    }else{
+    
+     }else{
         ESP_LOGE(TAG, "ERROR..: ID del evento desconocida");
         return;
     }
-
+/*
     if (send_data == 1){
         while (getDataLeft() > 0){
             float pendingData;
@@ -359,7 +359,7 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
         send_data_wifi(&data, sizeof(data));
     }else{
         writeToFlash(&data, sizeof(data));
-    }
+    } */
 
     return;
 }
