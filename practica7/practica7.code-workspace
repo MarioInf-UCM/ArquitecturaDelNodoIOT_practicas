@@ -1,6 +1,12 @@
 {
 	"folders": [
 		{
+			"path": "simple_ota_example"
+		},
+		{
+			"path": "advanced_https_ota"
+		},
+		{
 			"path": "."
 		},
 		{
