@@ -317,3 +317,169 @@ ACCEPT
 
 
 ### Paso 3 - Configurador del cliente HTTPS
+
+
+
+
+```BASH
+I (611) main_task: Calling app_main()
+I (611) advanced_https_ota_example: OTA example app_main start
+I (651) example_connect: Start example_connect.
+I (661) wifi:wifi driver task: 3ffbfbcc, prio:23, stack:6656, core=0
+I (671) wifi:wifi firmware version: ce9244d
+I (671) wifi:wifi certification version: v7.0
+I (671) wifi:config NVS flash: enabled
+I (671) wifi:config nano formating: disabled
+I (681) wifi:Init data frame dynamic rx buffer num: 32
+I (681) wifi:Init management frame dynamic rx buffer num: 32
+I (691) wifi:Init management short buffer num: 32
+I (691) wifi:Init dynamic tx buffer num: 32
+I (701) wifi:Init static rx buffer size: 1600
+I (701) wifi:Init static rx buffer num: 10
+I (701) wifi:Init dynamic rx buffer num: 32
+I (711) wifi_init: rx ba win: 6
+I (711) wifi_init: tcpip mbox: 32
+I (721) wifi_init: udp mbox: 6
+I (721) wifi_init: tcp mbox: 6
+I (721) wifi_init: tcp tx win: 5744
+I (731) wifi_init: tcp rx win: 5744
+I (731) wifi_init: tcp mss: 1440
+I (741) wifi_init: WiFi IRAM OP enabled
+I (741) wifi_init: WiFi RX IRAM OP enabled
+I (751) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07
+I (851) wifi:mode : sta (24:0a:c4:ea:36:b4)
+I (851) wifi:enable tsf
+I (861) example_connect: Connecting to ANIOT_test...
+I (861) example_connect: Waiting for IP(s)
+I (3271) wifi:new:<13,0>, old:<1,0>, ap:<255,255>, sta:<13,0>, prof:1
+I (4421) wifi:state: init -> auth (b0)
+I (4441) wifi:state: auth -> init (1c0)
+I (4441) wifi:new:<13,0>, old:<13,0>, ap:<255,255>, sta:<13,0>, prof:1
+I (4441) example_connect: Wi-Fi disconnected, trying to reconnect...
+I (6861) example_connect: Wi-Fi disconnected, trying to reconnect...
+I (9271) wifi:new:<13,0>, old:<13,0>, ap:<255,255>, sta:<13,0>, prof:1
+I (9281) wifi:state: init -> auth (b0)
+I (9281) wifi:state: auth -> assoc (0)
+I (9291) wifi:state: assoc -> run (10)
+I (9311) wifi:connected with ANIOT_test, aid = 19, channel 13, BW20, bssid = 5a:25:a7:40:ea:14
+I (9321) wifi:security: WPA2-PSK, phy: bgn, rssi: -49
+I (9321) wifi:pm start, type: 1
+
+I (9351) wifi:<ba-add>idx:0 (ifx:0, 5a:25:a7:40:ea:14), tid:0, ssn:0, winSize:64
+I (9371) wifi:APs beacon interval = 102400 us, DTIM period = 2
+I (10321) esp_netif_handlers: example_netif_sta ip: 192.168.43.198, mask: 255.255.255.0, gw: 192.168.43.1
+I (10321) example_connect: Got IPv4 event: Interface "example_netif_sta" address: 192.168.43.198
+I (10651) example_connect: Got IPv6 event: Interface "example_netif_sta" address: fe80:0000:0000:0000:260a:c4ff:feea:36b4, type: ESP_IP6_ADDR_IS_LINK_LOCAL
+I (10651) example_common: Connected to example_netif_sta
+I (10661) example_common: - IPv4 address: 192.168.43.198,
+I (10661) example_common: - IPv6 address: fe80:0000:0000:0000:260a:c4ff:feea:36b4, type: ESP_IP6_ADDR_IS_LINK_LOCAL
+I (10671) wifi:Set ps type: 0, coexist: 0
+
+I (10681) advanced_https_ota_example: Starting Advanced OTA example
+I (10691) advanced_https_ota_example: OTA started
+I (10691) main_task: Returned from app_main()
+I (11751) esp_https_ota: Starting OTA...
+I (11751) advanced_https_ota_example: Connected to server
+I (11751) esp_https_ota: Writing to partition subtype 16 at offset 0x110000
+I (11751) advanced_https_ota_example: Reading Image Description
+I (11751) advanced_https_ota_example: Running firmware version: 31c2e7f-dirty
+I (11771) advanced_https_ota_example: Verifying chip id of new image: 0
+I (212081) esp_image: segment 0: paddr=00110020 vaddr=3f400020 size=09260h ( 37472) map
+I (212091) esp_image: segment 1: paddr=00119288 vaddr=3ffb0000 size=020f0h (  8432) 
+I (212101) esp_image: segment 2: paddr=0011b380 vaddr=40080000 size=04c98h ( 19608) 
+I (212111) esp_image: segment 3: paddr=00120020 vaddr=400d0020 size=13950h ( 80208) map
+I (212131) esp_image: segment 4: paddr=00133978 vaddr=40084c98 size=07380h ( 29568) 
+I (212151) esp_image: segment 0: paddr=00110020 vaddr=3f400020 size=09260h ( 37472) map
+I (212161) esp_image: segment 1: paddr=00119288 vaddr=3ffb0000 size=020f0h (  8432) 
+I (212171) esp_image: segment 2: paddr=0011b380 vaddr=40080000 size=04c98h ( 19608) 
+I (212181) esp_image: segment 3: paddr=00120020 vaddr=400d0020 size=13950h ( 80208) map
+I (212201) esp_image: segment 4: paddr=00133978 vaddr=40084c98 size=07380h ( 29568) 
+I (212281) advanced_https_ota_example: Boot partition updated. Next Partition: 16
+I (212281) advanced_https_ota_example: OTA finish
+I (212281) advanced_https_ota_example: ESP_HTTPS_OTA upgrade successful. Rebooting ...
+I (213291) wifi:state: run -> init (0)
+I (213291) wifi:pm stop, total sleep time: 932835 us / 203966198 us
+
+I (213291) wifi:<ba-del>idx:0, tid:0
+I (213291) wifi:new:<13,0>, old:<13,0>, ap:<255,255>, sta:<13,0>, prof:1
+E (213301) wifi:NAN WiFi stop
+I (213341) wifi:flush txq
+I (213341) wifi:stop sw txq
+I (213341) wifi:lmac stop hw txq
+I (213341) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7084
+ho 0 tail 12 room 4
+load:0x40078000,len:15584
+load:0x40080400,len:4
+0x40080400: _init at ??:?
+
+load:0x40080404,len:3876
+entry 0x4008064c
+I (31) boot: ESP-IDF v5.1.1-dirty 2nd stage bootloader
+I (31) boot: compile time Nov  6 2023 12:01:54
+I (31) boot: Multicore bootloader
+I (36) boot: chip revision: v1.0
+I (40) boot.esp32: SPI Speed      : 40MHz
+I (44) boot.esp32: SPI Mode       : DIO
+I (49) boot.esp32: SPI Flash Size : 4MB
+I (53) boot: Enabling RNG early entropy source...
+I (59) boot: Partition Table:
+I (62) boot: ## Label            Usage          Type ST Offset   Length
+I (70) boot:  0 nvs              WiFi data        01 02 00009000 00004000
+I (77) boot:  1 otadata          OTA data         01 00 0000d000 00002000
+I (84) boot:  2 phy_init         RF data          01 01 0000f000 00001000
+I (92) boot:  3 factory          factory app      00 00 00010000 00100000
+I (99) boot:  4 ota_0            OTA app          00 10 00110000 00100000
+I (107) boot:  5 ota_1            OTA app          00 11 00210000 00100000
+I (114) boot: End of partition table
+I (119) esp_image: segment 0: paddr=00110020 vaddr=3f400020 size=09260h ( 37472) map
+I (141) esp_image: segment 1: paddr=00119288 vaddr=3ffb0000 size=020f0h (  8432) load
+I (144) esp_image: segment 2: paddr=0011b380 vaddr=40080000 size=04c98h ( 19608) load
+I (155) esp_image: segment 3: paddr=00120020 vaddr=400d0020 size=13950h ( 80208) map
+I (184) esp_image: segment 4: paddr=00133978 vaddr=40084c98 size=07380h ( 29568) load
+I (203) boot: Loaded app from partition at offset 0x110000
+I (203) boot: Disabling RNG early entropy source...
+I (214) cpu_start: Multicore app
+I (215) cpu_start: Pro cpu up.
+I (215) cpu_start: Starting app cpu, entry point is 0x400810e8
+I (202) cpu_start: App cpu up.
+I (233) cpu_start: Pro cpu start user code
+I (233) cpu_start: cpu freq: 160000000 Hz
+I (233) cpu_start: Application information:
+I (238) cpu_start: Project name:     helloMe
+I (243) cpu_start: App version:      1
+I (247) cpu_start: Compile time:     Nov  7 2023 16:41:46
+I (253) cpu_start: ELF file SHA256:  2583ca4fdedc650a...
+Warning: checksum mismatch between flashed and built applications. Checksum of built application is 1328f826aeac4151a2f1aa1f29396ed6a9b82788122000f3272f5c20856b4363
+I (259) cpu_start: ESP-IDF:          v5.1.1-dirty
+I (264) cpu_start: Min chip rev:     v0.0
+I (269) cpu_start: Max chip rev:     v3.99 
+I (274) cpu_start: Chip rev:         v1.0
+I (279) heap_init: Initializing. RAM available for dynamic allocation:
+I (286) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM
+I (292) heap_init: At 3FFB2958 len 0002D6A8 (181 KiB): DRAM
+I (298) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM
+I (305) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
+I (311) heap_init: At 4008C018 len 00013FE8 (79 KiB): IRAM
+I (319) spi_flash: detected chip: generic
+I (322) spi_flash: flash io: dio
+I (326) app_start: Starting scheduler on CPU0
+I (331) app_start: Starting scheduler on CPU1
+I (331) main_task: Started on CPU0
+I (341) main_task: Calling app_main()
+Hello world!
+This is esp32 chip with 2 CPU core(s), WiFi/BTBLE, silicon revision v1.0, 4MB external flash
+Minimum free heap size: 301252 bytes
+Restarting in 10 seconds...
+Restarting in 9 seconds...
+Restarting in 8 seconds...
+.
+.
+.
+```
