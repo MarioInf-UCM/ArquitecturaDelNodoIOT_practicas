@@ -1,10 +1,13 @@
 {
 	"folders": [
 		{
-			"path": "simple_ota_example"
+			"path": "client_OTA"
 		},
 		{
-			"path": "advanced_https_ota"
+			"path": "server_OTA"
+		},
+		{
+			"path": "helloWorld_toUpdte"
 		},
 		{
 			"path": "."
@@ -45,7 +48,8 @@
 			"gpio.h": "c",
 			"esp_system.h": "c",
 			"stdio.h": "c",
-			"esp_check.h": "c"
+			"esp_check.h": "c",
+			"esp_crt_bundle.h": "c"
 		}
 	}
 }

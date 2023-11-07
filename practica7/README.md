@@ -1,5 +1,6 @@
 # PRÁCTICA 7 - Over The Air Updates
 
+## Cuestiones básicas sobre el cliente OTA
 
 <br />
 
@@ -62,7 +63,7 @@ I (952) simple_ota_example: Número de particiones OTA..: 2
 >
 >¿Cómo se llama el fichero de certificado que se incluirá en el binario?
 
-La aplicación utiliza un fichero de certificación a la hora de realizar la conexión HTTPS con el objetivo de que esta pueda llevarse a cabo de forma segura y obtener así la nueva versión del firware a instalar en el SoC. Sin embargo, para poder utilizarse dicho certificado, este debe ser incluido dentro de los fichero de texto que componen el componente de la aplicación que lo utiliza. De esta manera, para poder ver que certificado estas utilizado podemos examinar el fichero **CMakeList.txt** del componente main, cuyo interior contiene:
+La aplicación utiliza un fichero de certificación a la hora de realizar la conexión HTTPS con el objetivo de que esta pueda llevarse a cabo de forma segura y obtener así la nueva versión del firmware a instalar en el SoC. Sin embargo, para poder utilizarse dicho certificado, este debe ser incluido dentro de los fichero de texto que componen el componente de la aplicación que lo utiliza. De esta manera, para poder ver que certificado estas utilizado podemos examinar el fichero **CMakeList.txt** del componente main, cuyo interior contiene:
 
 ```txt
 # Embed the server root certificate into the final binary
@@ -103,7 +104,7 @@ irxDALfzRIYrtDhTrrcMP6nXMO8ywnogk6jJIe0S7piy1iLqlEjNiNw3QF9o0KdX
 >
 >¿Cómo y dónde se indica que se debe incluir el certificado?
 
-Para responder a la pregunta vamos a examinar la estructura de configuración utilizada a la hora de llevar a cabo la conexión HTTPS con el servidor que nos proveerá de la nueva imagen del firware. En el siguiente cuadro podemos ver la formación de dicha estructura y como se especifica el uso de un certificado mediante la línea `.cert_pem = (char *)server_cert_pem_start, `, lo cual hace obligatorio el uso de uno a la hora de realizar la conexión con el servidor.
+Para responder a la pregunta vamos a examinar la estructura de configuración utilizada a la hora de llevar a cabo la conexión HTTPS con el servidor que nos proveerá de la nueva imagen del firmware. En el siguiente cuadro podemos ver la formación de dicha estructura y como se especifica el uso de un certificado mediante la línea `.cert_pem = (char *)server_cert_pem_start, `, lo cual hace obligatorio el uso de uno a la hora de realizar la conexión con el servidor.
 
 ```C
 esp_http_client_config_t config = {
@@ -166,8 +167,153 @@ En conclusión, una vez visto lo anterior podemos decir que la variable **server
 
 <br />
 
->Tareas
+## Tareas básicas sobre el cliente y el servidor OTA
+
+
+<br />
+
+>Tarea
 >
->- Hacer funcionar el ejemplo conectando a un servidor que estará ejecutando en el equipo del profesor. Se usará este certificado para la conexión segura por HTTP y la red WiFi creada en el laboratorio. Se proporcionarán los credenciales de la WiFi y la IP del servidor durante el laboratorio.
->- Alterar un byte del fichero del certificado y probar nuevamente.
->- [Seguir los pasos del ejemplo](https://github.com/espressif/esp-idf/tree/master/examples/system/ota) para crear vuestro propio servidor HTTPS y certificado y probad de nuevo
+>Hacer funcionar el ejemplo conectando a un servidor que estará ejecutando en el equipo del profesor. Se usará este certificado para la conexión segura por HTTP y la red WiFi creada en el laboratorio. Se proporcionarán los credenciales de la WiFi y la IP del servidor durante el laboratorio.
+
+Para poder llevar a cabo dicha tarea necesitaremos descargar el certificado, el cual situaremos en la misma carpeta que donde se encuentra el certificado de ejemplo y le daremos el nombre **ca_cert_ANIOT_test.pem**. Debido a esto, deberemos modificar las líneas del ejemplo donde se extra el contenido de dicho certificado una vez ha sido incrustado en la aplicación. En el siguiente cuadro podemos ver dicha modificación:
+
+```C
+extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_ANIOT_test_pem_start");
+extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_ANIOT_test_pem_end");
+```
+
+Posteriormente necesitaremos especificar las credenciales WIFI y la IP del servidor necesarias para llevar a cabo la conexión y consecuente descarga del nuevo firmware de la aplicación. Esto lo llevamos a cabo a través del menú de configuración, en la siguiente imagen podemos ver las credenciales especificadas:
+
+
+<img src="images/" alt="drawing" style="width:60%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+Una vez hecho esto podremos ejecutar la aplicación, donde obtendremos la siguiente salida junto con el nuevo firmware:
+
+```BASH
+TODO
+```
+
+
+
+<br />
+
+>Tarea
+>
+>Alterar un byte del fichero del certificado y probar nuevamente.
+
+```BASH
+TODO
+```
+
+
+
+<br />
+
+>Tarea
+>
+>[Seguir los pasos del ejemplo](https://github.com/espressif/esp-idf/tree/master/examples/system/ota) para crear vuestro propio servidor HTTPS y certificado y probad de nuevo.
+
+
+### Paso 1 - Creación del nuevo firmware
+
+
+Creamos el nuevo firmware que se descargará desde el servidor HTTPS
+
+```C
+#include <stdio.h>
+#include "esp_log.h"
+
+
+const char * TAG = "MAIN";
+
+void app_main(void){
+
+    ESP_LOGI(TAG,"THIS IS A NOEW FIRMWARE VERSION -> HELLO WORLD :)\n");
+}
+```
+
+
+generamos el binario del nuevo firmware:
+
+```BASH
+mario@debian12:~/helloWorld_toUpdte$ idf.py helloWorld_toUpdate
+```
+
+
+### Paso 2 - Configurador del servidor HTTPS
+
+
+configuración server HTTPS
+
+<img src="images/serverHTTPS_config.png" alt="drawing" style="width:40%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+
+Ejecución HTTPS check de conexion con AP
+
+```BASH
+I (5452) esp_netif_handlers: example_netif_sta ip: 192.168.43.106, mask: 255.255.255.0, gw: 192.168.43.1
+I (5452) example_connect: Got IPv4 event: Interface "example_netif_sta" address: 192.168.43.106
+I (5632) example_connect: Got IPv6 event: Interface "example_netif_sta" address: fe80:0000:0000:0000:963c:c6ff:fecd:bb4c, type: ESP_IP6_ADDR_IS_LINK_LOCAL
+I (5632) example_common: Connected to example_netif_sta
+I (5642) example_common: - IPv4 address: 192.168.43.106,
+I (5642) example_common: - IPv6 address: fe80:0000:0000:0000:963c:c6ff:fecd:bb4c, type: ESP_IP6_ADDR_IS_LINK_LOCAL
+```
+
+
+
+
+Generando clave server HTTPS
+
+```BASH
+mario@debian12:~/server_OTA/build$ openssl req -x509 -newkey rsa:2048 -keyout ca_key.pem -out ca_cert.pem -days 365 -nodes
+......+............+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*............+.....+............+.......+...+........+...+.+...+...........+......+.+..+.+.....+.+........+...+...+......+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*...........+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+.+......+...+......+.+..+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*......+...........+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.........+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:ES
+State or Province Name (full name) [Some-State]:Madrid
+Locality Name (eg, city) []:Madrid
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:UCM
+Organizational Unit Name (eg, section) []:es
+Common Name (e.g. server FQDN or YOUR name) []:192.168.43.106
+Email Address []:
+```
+
+Moviendo el certificado 
+
+```BASH
+mario@debian12:~/server_OTA/build$ mv ca_cert.pem ../server_certs/
+mario@debian12:~/server_OTA/build$ mv ca_key.pem ../server_certs/
+```
+
+Ejecución del servidor SSH
+
+```BASH
+mario@debian12:~/Documentos/universidad/ArquitecturaDelNodoIOT/ArquitecturaDelNodoIOT_practicas/practica7/server_OTA$ openssl s_server -WWW -key server_certs/ca_key.pe
+m -cert server_certs/ca_cert.pem -port 8070
+Using default temp DH parameters
+ACCEPT
+```
+
+
+
+### Paso 3 - Configurador del cliente HTTPS

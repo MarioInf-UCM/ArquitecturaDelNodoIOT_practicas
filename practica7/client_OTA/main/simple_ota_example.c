@@ -40,8 +40,18 @@
 #endif
 
 static const char *TAG = "simple_ota_example";
+
+//Referencia al certificdo utilziado en la terea
 extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
+
+//Referencia al certificdo utilziado en clase
+//extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_ANIOT_test_pem_start");
+//extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_ANIOT_test_pem_end");
+
+//Referencis al certificado por defecto
+//extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_default_pem_start");
+//extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_default_pem_end");
 
 #define OTA_URL_SIZE 256
 
