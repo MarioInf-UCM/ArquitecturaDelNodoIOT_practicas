@@ -8,7 +8,6 @@ const char * TAG = "MAIN";
 
 void app_main(void){
 
-    ESP_LOGI(TAG,"THIS IS A NOEW FIRMWARE VERSION -> HELLO WORLD :)\n");
-    printf("Otra cadena\n");
+    ESP_LOGI(TAG,"THIS IS A NEW FIRMWARE VERSION -> HELLO WORLD :)\n");
     vTaskDelete(NULL);
 }

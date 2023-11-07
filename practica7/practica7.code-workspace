@@ -1,13 +1,16 @@
 {
 	"folders": [
 		{
-			"path": "client_OTA"
+			"path": "ej1_simple_ota_example"
 		},
 		{
-			"path": "server_OTA"
+			"path": "ej2_advanced_https_ota_example"
 		},
 		{
-			"path": "helloWorld_toUpdte"
+			"path": "ej2_serverSSL_content"
+		},
+		{
+			"path": "ej2_helloWorld_toUpdate"
 		},
 		{
 			"path": "."

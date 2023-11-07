@@ -176,29 +176,7 @@ En conclusión, una vez visto lo anterior podemos decir que la variable **server
 >
 >Hacer funcionar el ejemplo conectando a un servidor que estará ejecutando en el equipo del profesor. Se usará este certificado para la conexión segura por HTTP y la red WiFi creada en el laboratorio. Se proporcionarán los credenciales de la WiFi y la IP del servidor durante el laboratorio.
 
-Para poder llevar a cabo dicha tarea necesitaremos descargar el certificado, el cual situaremos en la misma carpeta que donde se encuentra el certificado de ejemplo y le daremos el nombre **ca_cert_ANIOT_test.pem**. Debido a esto, deberemos modificar las líneas del ejemplo donde se extra el contenido de dicho certificado una vez ha sido incrustado en la aplicación. En el siguiente cuadro podemos ver dicha modificación:
-
-```C
-extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_ANIOT_test_pem_start");
-extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_ANIOT_test_pem_end");
-```
-
-Posteriormente necesitaremos especificar las credenciales WIFI y la IP del servidor necesarias para llevar a cabo la conexión y consecuente descarga del nuevo firmware de la aplicación. Esto lo llevamos a cabo a través del menú de configuración, en la siguiente imagen podemos ver las credenciales especificadas:
-
-
-<img src="images/" alt="drawing" style="width:60%; 
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 1%;
-    margin-botton: 1%;
-"/>
-
-Una vez hecho esto podremos ejecutar la aplicación, donde obtendremos la siguiente salida junto con el nuevo firmware:
-
-```BASH
-TODO
-```
+**El presente ejercicio no pudo llevarse a cabo debido a la imposibilidad de disponer en el aula de los recursos necesarios para el mismo.**
 
 
 
@@ -208,9 +186,7 @@ TODO
 >
 >Alterar un byte del fichero del certificado y probar nuevamente.
 
-```BASH
-TODO
-```
+**El presente ejercicio no pudo llevarse a cabo debido a la imposibilidad de disponer en el aula de los recursos necesarios para el mismo.** 
 
 
 
@@ -220,11 +196,20 @@ TODO
 >
 >[Seguir los pasos del ejemplo](https://github.com/espressif/esp-idf/tree/master/examples/system/ota) para crear vuestro propio servidor HTTPS y certificado y probad de nuevo.
 
+Con el objetivo de facilitar la compresión de la realización del ejercicio vamos a dividir el mismo en pasos. Para la realización del presente proyecto necesitaremos poner en contacto tres elementos completamente diferenciados:
+- Un nuevo firmware que será el que se descargue e instale en el SoC.
+- Un servidor utilizado des que descargar el firmware mediante SSL.
+- Un cliente instalado en el SoC que descargue e instale el nuevo firmware.
+
+
+
+<br />
 
 ### Paso 1 - Creación del nuevo firmware
 
+El primer paso será la creación del nuevo firmware que se descargará desde el servidor e instalará en el SoC. Lo habitual sería desarrollar una nueva versión de la aplicación que se encuentra corriendo actualmente, pero para facilitar la compresión vamos a crear un nuevo proyecto que sea lo suficientemente simple y visual como para diferenciarlo cuando este se comience a ejecutar.
 
-Creamos el nuevo firmware que se descargará desde el servidor HTTPS
+En nuestro caso llamaremos al proyecto **ej2_helloWorld_toUpdate** y en el siguiente cuadro podremos ver el contenido de su función principal:
 
 ```C
 #include <stdio.h>
@@ -235,47 +220,27 @@ const char * TAG = "MAIN";
 
 void app_main(void){
 
-    ESP_LOGI(TAG,"THIS IS A NOEW FIRMWARE VERSION -> HELLO WORLD :)\n");
+    ESP_LOGI(TAG,"THIS IS A NEW FIRMWARE VERSION -> HELLO WORLD :)\n");
 }
 ```
 
+Como podemos ver, el código es extremadamente simple, pero necesitaremos el proyecto compilado en un binario. Este archivo será el resultante de llevar a cabo la compilación estándar del proyecto y se situará dentro de la carpeta `buil/` una vez que dicho proceso haya terminado. Además para que la compilación de como resultado el binario con el nombre deseado, necesitaremos indicarlo en la instrucción **project**, dentro del archivo **CMakeList.txt** general del proyecto, tal y como podemos ver en el siguiente cuadro:
 
-generamos el binario del nuevo firmware:
+```C
+cmake_minimum_required(VERSION 3.16)
 
-```BASH
-mario@debian12:~/helloWorld_toUpdte$ idf.py helloWorld_toUpdate
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(helloWorld_toUpdate)
 ```
 
 
-### Paso 2 - Configurador del servidor HTTPS
+<br />
 
+### Paso 2 - Configurador del servidor
 
-configuración server HTTPS
+El servidor encargado de provisionar el nuevo firmware a instalar en el SoC estará corriendo dentro de un equipo de sobremesa, el cual utilizará el protocolo de conexión segura **SSL** para llevar a cabo la comunicación con los clientes y la correspondiente descarga. Para poder hacer esto, el primer paso será generar un certificado de seguridad que podamos utilizar para llevar a cabo la conexión.
 
-<img src="images/serverHTTPS_config.png" alt="drawing" style="width:40%; 
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 1%;
-    margin-botton: 1%;
-"/>
-
-
-Ejecución HTTPS check de conexion con AP
-
-```BASH
-I (5452) esp_netif_handlers: example_netif_sta ip: 192.168.43.106, mask: 255.255.255.0, gw: 192.168.43.1
-I (5452) example_connect: Got IPv4 event: Interface "example_netif_sta" address: 192.168.43.106
-I (5632) example_connect: Got IPv6 event: Interface "example_netif_sta" address: fe80:0000:0000:0000:963c:c6ff:fecd:bb4c, type: ESP_IP6_ADDR_IS_LINK_LOCAL
-I (5632) example_common: Connected to example_netif_sta
-I (5642) example_common: - IPv4 address: 192.168.43.106,
-I (5642) example_common: - IPv6 address: fe80:0000:0000:0000:963c:c6ff:fecd:bb4c, type: ESP_IP6_ADDR_IS_LINK_LOCAL
-```
-
-
-
-
-Generando clave server HTTPS
+La generación del certificado la llevaremos a cabo mediante la herramienta **OpenSSL**, en línea de comandos. Aunque dicha herramienta solicita diversos datos al para llevar a cabo la creación dle certificado, el único que afectará a nuestro uso del mismo es el campo **Common Name**, en el cual necesitaremos indicar la dirección IP del equipo donde se encontrará nuestro servidor (en nuestro caso se tratará de la dirección **192.168.43.122**). En el siguiente cuadro podremos ver la generación del certificado:
 
 ```BASH
 mario@debian12:~/server_OTA/build$ openssl req -x509 -newkey rsa:2048 -keyout ca_key.pem -out ca_cert.pem -days 365 -nodes
@@ -294,32 +259,56 @@ State or Province Name (full name) [Some-State]:Madrid
 Locality Name (eg, city) []:Madrid
 Organization Name (eg, company) [Internet Widgits Pty Ltd]:UCM
 Organizational Unit Name (eg, section) []:es
-Common Name (e.g. server FQDN or YOUR name) []:192.168.43.106
-Email Address []:
+Common Name (e.g. server FQDN or YOUR name) []:192.168.43.122
+Email Address []:marioa25@ucm.es
 ```
 
-Moviendo el certificado 
+Un vez hemos creado tanto el certificado como el archivo binario que contiene el nuevo firmware, deberemos crear una nueva carpeta que servirá como localización para los archivos de nuestro servidor y constituirá el directorio raíz del mismo. En nuestro caso llamaremos a la carpeta **ej2_serverSSL_content** y en cuyo interior depositaremos tanto el archivo binario como los archivos generados mediante **OpenSSL** al crear el certificado:
 
 ```BASH
-mario@debian12:~/server_OTA/build$ mv ca_cert.pem ../server_certs/
-mario@debian12:~/server_OTA/build$ mv ca_key.pem ../server_certs/
+mario@debian12:~/server_OTA/build$ mv ca_cert.pem ej2_serverSSL_content/
+mario@debian12:~/server_OTA/build$ mv ca_key.pem ej2_serverSSL_content/
+mario@debian12:~/server_OTA/build$ mv helloWorld_toUpdate ej2_serverSSL_content/
 ```
 
-Ejecución del servidor SSH
+Una vez tenemos los tres archivos dentro del directorio de nuestro servidor, únicamente necesitaremos lanzarlo mediante la orden utilizada en el siguiente cuadro, donde también podremos ver la respuesta afirmativa de la creación del mismo y como este queda a la espera de las solicitudes de los clientes:
 
 ```BASH
-mario@debian12:~/Documentos/universidad/ArquitecturaDelNodoIOT/ArquitecturaDelNodoIOT_practicas/practica7/server_OTA$ openssl s_server -WWW -key server_certs/ca_key.pe
-m -cert server_certs/ca_cert.pem -port 8070
+mario@debian12:~/serverPrueba$ openssl s_server -WWW -key ca_key.pem -cert ca_cert.pem -port 8070
 Using default temp DH parameters
 ACCEPT
 ```
 
 
 
-### Paso 3 - Configurador del cliente HTTPS
+<br />
 
+### Paso 3 - Configurador del cliente
 
+Como último paso necesitaremos configurar el programa cliente, el cuál será el encargado de ejecutarse en el SoC, conectarse al servidor descargando el nuevo firmware e instalarlo. Para esto utilizaremos el proyecto de ejemplo **advanced_https_ota_example**, u cuyo primer paro será llevar a cabo la configuración dle mismo mediante el menú de configuración. Dentro de este necesitaremos especificar cual será el SSID y la contraseña del Punto de Acceso al que se conecte el SoC, mediante el cual se llevará a cabo la comunicación con el servidor. 
 
+También necesitaremos especificar la ruta donde se encuentra el nuevo firmware que queremos descargar, partiendo desde el directorio raíz donde se esta ejecutando el servidor y el cual dependerá de donde hayamos puesto el binario dentro del mismo. En la siguiente imagen podemos ver dicha configuración:
+
+<img src="images/configurcionEjercicio1.png" alt="drawing" style="width:40%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-SWbotton: 1%;
+"/>
+
+Antes de poder ejecutar el cliente necesitaremos aportar al mismo el certificado con el que se comunicará con el servidor, el cual se trata del archivo **ca_cert.pem** generado anteriormente. Este deberá ser pegado dentro de la carpeta **server_certs/**. En este punto estaremos listos para ejecutar el cliente dentro del SoC, el cual llevará a cabo los siguientes pasos:
+
+1) Iniciará la conexión al Punto de Acceso indicado mediante el SSID y la contraseña indicadas como parámetro.
+2) Obtendrá las direcciones IP desde el Punto de Acceso.
+3) Iniciará la comunicación con el servidor mediante la dirección IP dentro de la URL indicada como parámetro.
+4) Se enviará el certificado al servidor 
+5) Se descargará el nuevo firmware en el SoC indicado mediante el parámetro URL.
+6) Se comprobará el correcto funcionamiento del certificado.
+7) Se instalará el nuevo firmware en la próxima partición OTA utilizada.
+8) Se reiniciará el SoC utilizando como sección de arranque la partición OTA del nuevo firmware.
+
+En el siguiente cuadro tenemos um ejemplo de la ejecución del programa cliente, donde podemos ver toda la configuración inicial y el proceso previo a la descarga indicado anteriormente. Finalmente podemos ver como el SoC se reinicio y comienza a ejecutar el nuevo firmware descargado, correspondiente al proyecto **ej3_helloWorld_toUpdate**.
 
 ```BASH
 I (611) main_task: Calling app_main()
@@ -399,87 +388,10 @@ I (212281) advanced_https_ota_example: OTA finish
 I (212281) advanced_https_ota_example: ESP_HTTPS_OTA upgrade successful. Rebooting ...
 I (213291) wifi:state: run -> init (0)
 I (213291) wifi:pm stop, total sleep time: 932835 us / 203966198 us
-
-I (213291) wifi:<ba-del>idx:0, tid:0
-I (213291) wifi:new:<13,0>, old:<13,0>, ap:<255,255>, sta:<13,0>, prof:1
-E (213301) wifi:NAN WiFi stop
-I (213341) wifi:flush txq
-I (213341) wifi:stop sw txq
-I (213341) wifi:lmac stop hw txq
-I (213341) wifi:Deinit lldesc rx mblock:10
-ets Jun  8 2016 00:22:57
-
-rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
-configsip: 0, SPIWP:0xee
-clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
-mode:DIO, clock div:2
-load:0x3fff0030,len:7084
-ho 0 tail 12 room 4
-load:0x40078000,len:15584
-load:0x40080400,len:4
-0x40080400: _init at ??:?
-
-load:0x40080404,len:3876
-entry 0x4008064c
-I (31) boot: ESP-IDF v5.1.1-dirty 2nd stage bootloader
-I (31) boot: compile time Nov  6 2023 12:01:54
-I (31) boot: Multicore bootloader
-I (36) boot: chip revision: v1.0
-I (40) boot.esp32: SPI Speed      : 40MHz
-I (44) boot.esp32: SPI Mode       : DIO
-I (49) boot.esp32: SPI Flash Size : 4MB
-I (53) boot: Enabling RNG early entropy source...
-I (59) boot: Partition Table:
-I (62) boot: ## Label            Usage          Type ST Offset   Length
-I (70) boot:  0 nvs              WiFi data        01 02 00009000 00004000
-I (77) boot:  1 otadata          OTA data         01 00 0000d000 00002000
-I (84) boot:  2 phy_init         RF data          01 01 0000f000 00001000
-I (92) boot:  3 factory          factory app      00 00 00010000 00100000
-I (99) boot:  4 ota_0            OTA app          00 10 00110000 00100000
-I (107) boot:  5 ota_1            OTA app          00 11 00210000 00100000
-I (114) boot: End of partition table
-I (119) esp_image: segment 0: paddr=00110020 vaddr=3f400020 size=09260h ( 37472) map
-I (141) esp_image: segment 1: paddr=00119288 vaddr=3ffb0000 size=020f0h (  8432) load
-I (144) esp_image: segment 2: paddr=0011b380 vaddr=40080000 size=04c98h ( 19608) load
-I (155) esp_image: segment 3: paddr=00120020 vaddr=400d0020 size=13950h ( 80208) map
-I (184) esp_image: segment 4: paddr=00133978 vaddr=40084c98 size=07380h ( 29568) load
-I (203) boot: Loaded app from partition at offset 0x110000
-I (203) boot: Disabling RNG early entropy source...
-I (214) cpu_start: Multicore app
-I (215) cpu_start: Pro cpu up.
-I (215) cpu_start: Starting app cpu, entry point is 0x400810e8
-I (202) cpu_start: App cpu up.
-I (233) cpu_start: Pro cpu start user code
-I (233) cpu_start: cpu freq: 160000000 Hz
-I (233) cpu_start: Application information:
-I (238) cpu_start: Project name:     helloMe
-I (243) cpu_start: App version:      1
-I (247) cpu_start: Compile time:     Nov  7 2023 16:41:46
-I (253) cpu_start: ELF file SHA256:  2583ca4fdedc650a...
-Warning: checksum mismatch between flashed and built applications. Checksum of built application is 1328f826aeac4151a2f1aa1f29396ed6a9b82788122000f3272f5c20856b4363
-I (259) cpu_start: ESP-IDF:          v5.1.1-dirty
-I (264) cpu_start: Min chip rev:     v0.0
-I (269) cpu_start: Max chip rev:     v3.99 
-I (274) cpu_start: Chip rev:         v1.0
-I (279) heap_init: Initializing. RAM available for dynamic allocation:
-I (286) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM
-I (292) heap_init: At 3FFB2958 len 0002D6A8 (181 KiB): DRAM
-I (298) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM
-I (305) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
-I (311) heap_init: At 4008C018 len 00013FE8 (79 KiB): IRAM
-I (319) spi_flash: detected chip: generic
-I (322) spi_flash: flash io: dio
-I (326) app_start: Starting scheduler on CPU0
-I (331) app_start: Starting scheduler on CPU1
+.
+.
+.
 I (331) main_task: Started on CPU0
 I (341) main_task: Calling app_main()
-Hello world!
-This is esp32 chip with 2 CPU core(s), WiFi/BTBLE, silicon revision v1.0, 4MB external flash
-Minimum free heap size: 301252 bytes
-Restarting in 10 seconds...
-Restarting in 9 seconds...
-Restarting in 8 seconds...
-.
-.
-.
+I (351) MAIN: THIS IS A NEW FIRMWARE VERSION -> HELLO WORLD :)
 ```
