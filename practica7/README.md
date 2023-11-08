@@ -308,6 +308,8 @@ Antes de poder ejecutar el cliente necesitaremos aportar al mismo el certificado
 7) Se instalará el nuevo firmware en la próxima partición OTA utilizada.
 8) Se reiniciará el SoC utilizando como sección de arranque la partición OTA del nuevo firmware.
 
+**IMPORTANTE:** Puede darse el caso de que el proceso se ejecute correctamente pero que este quede parado debido que no se cierra la conexión TCP entre el cliente y el servidor. En dicho caso, será necesario cerrarla de forma manual.
+
 En el siguiente cuadro tenemos um ejemplo de la ejecución del programa cliente, donde podemos ver toda la configuración inicial y el proceso previo a la descarga indicado anteriormente. Finalmente podemos ver como el SoC se reinicio y comienza a ejecutar el nuevo firmware descargado, correspondiente al proyecto **ej3_helloWorld_toUpdate**.
 
 ```BASH
@@ -409,7 +411,47 @@ I (351) MAIN: THIS IS A NEW FIRMWARE VERSION -> HELLO WORLD :)
 >- Se desarrollará una función de auto-diagnóstico (self-test) que permita decidir si la nueva imagen se comporta de forma correcta.
 >- Se utilizará la opción de rollback para indicar si la nueva imagen se elige para futuros arranques o se marca como inválida.
 
+Para llevar a cabo el presente ejercicio vamos a utilizar como base el ejercicio empleado en la sección anterior, el cual integraremos como un nuevo componente del ya conocido proyecto de integración. Para evitar repeticiones vamos a obviar aquellos pasos ya descritos anteriormente y que hacen referencia al proceso de configuración y comunicación entre el cliente y el servidor.
 
+El primer paso será la creación de un medio por el que podamos indicarle a al SoC cundo se debe actualizar. Esto lo llevaremos cabo mediante un pin GPIO, para lo cual necesitaremos modificar el componente **monitorGPIO** ya implementado anteriormente. En el siguiente cuadro podemos ver dicha configuración:
+
+```C
+esp_event_loop_handle_t monitor_gpio_init(){
+.
+.
+.
+    // Initialize OTA GPIO Port
+    gpio_reset_pin(OTA_BUTTON_GPIO_PORT);
+    gpio_set_direction(OTA_BUTTON_GPIO_PORT, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(OTA_BUTTON_GPIO_PORT, GPIO_PULLUP_PULLDOWN);
+.
+.
+.
+}
+
+static void gpio_timer_callback(void *arg)
+{
+.
+.
+.
+
+    if (gpio_get_level(OTA_BUTTON_GPIO_PORT)){
+        ESP_LOGI(TAG, "Botón GPIO %d presionado", OTA_BUTTON_GPIO_PORT);
+        esp_event_post_to(loop_gpio, MONITOR_GPIO, MONITOR_OTA_GPIO_BUTTON_PRESSED, NULL, 0, portMAX_DELAY);
+    }
+.
+.
+.
+}
+```
+
+Para poder integrar el nuevo componente, necesitaremos incluir el componente externo **protocol_examples_common**, tanto en el fichero de **CMkeLists.txt** del propio componente como en el general del proyecto. En el siguiente cuadro podemos ver la línea a incluir:
+
+```C
+set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
+```
+
+En lo referente al nuevo componente integrado, el primer paso será habilitar el soporte de Rollback dentro de menú de configuración y la red WIFI a la cual vamos a conectarnos (nosotros utilizaremos la misma que en el ejercicio anterior). En la siguiente imagen podemos ver la opción de configuración indicada:
 
 <img src="images/configuracionEjercicio2.png" alt="drawing" style="width:40%; 
     display: block;
@@ -419,13 +461,6 @@ I (351) MAIN: THIS IS A NEW FIRMWARE VERSION -> HELLO WORLD :)
     margin-botton: 1%;
 "/>
 
-<img src="images/configuracionWIFI_ejercicio2.png" alt="drawing" style="width:40%; 
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 1%;
-    margin-botton: 1%;
-"/>
 <img src="images/configurcionFlashSize_ejercicio2.png" alt="drawing" style="width:40%; 
     display: block;
     margin-left: auto;
@@ -434,8 +469,51 @@ I (351) MAIN: THIS IS A NEW FIRMWARE VERSION -> HELLO WORLD :)
     margin-botton: 1%;
 "/>
 
+Necesitaremos crear una función de self-check, la cual se encargara de "verificar" que el nuevo firmware encargado se encuentra en el estado correcto. Para esto se ha creado una nueva función que únicamente retorna un estado ESP_OK o un ESP_FAIL con un 50% de posibilidades.
+
+```C
+esp_err_t self_test(void){
+
+    srand(time(0));
+    if((rand() & 1)? true : false){
+        return ESP_OK;
+    }else{
+        return ESP_FAIL;
+    }
+}
+```
+
+Para poder operar con esta función y llevar a cabo el proceso de rollback de forma correcta, el ejemplo utilizado ya tiene definida la sección adecuada para ello, donde nosotros únicamente necesitamos especificar dicha función. Esta se encuentra al final de la función `void advanced_ota_example_task(void *pvParameter)` y para poder acceder a ella necesitamos haber configurado la opción indicada anteriormente. En el siguiente cuadro podemos ver la configuración de dicha sección:
 
 
+```C
+//Comprobción de la función self_check y ejecución del rollback
+#if defined(CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE)
+    /**
+     * We are treating successful WiFi connection as a checkpoint to cancel rollback
+     * process and mark newly updated firmware image as active. For production cases,
+     * please tune the checkpoint behavior per end application requirement.
+     */
+    ESP_LOGI(TAG, "Comprobando integridad del nuevo firmware");
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    esp_ota_img_states_t ota_state;
+    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+
+                esp_err_t checkStatus = self_test();
+            if (checkStatus == ESP_OK) {       //esp_ota_mark_app_valid_cancel_rollback() == ESP_OK
+                ESP_LOGI(TAG, "La aplicación es válida. Continuando con el proceso de actualización");
+                esp_ota_mark_app_valid_cancel_rollback();
+            } else {
+                ESP_LOGE(TAG, "La aplicación es errónea. Procediendo al Rollback.");
+                esp_ota_mark_app_invalid_rollback_and_reboot();
+            }
+
+        }
+    }
+```
+
+En este paso ya podremos volver a ejecutar nuestro proyecto de estructuración y una vez se haya pulsado el botón GPIO conectado al pin correspondiente, el sistema comenzará el proceso OTA de actualización. En nuestro caso hemos creado una nueva versión del proyecto que únicamente cambia el encabezado de la mismo, pero también se puede utilizar el binario del proyecto **ej2_helloWorld_toUpdte**, igul que en el ejercicio anterior. En el siguiente cuadro tenemos un ejemplo de ejecución, donde se han recortados ciertas partes de la salida para evitar que sea difícil de entender:
 
 ```BASH
 I (680) main_task: Calling app_main()
