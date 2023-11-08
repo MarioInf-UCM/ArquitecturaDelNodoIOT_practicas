@@ -408,3 +408,119 @@ I (351) MAIN: THIS IS A NEW FIRMWARE VERSION -> HELLO WORLD :)
 >- Cuando se reciba un evento externo (la pulsación de un botón o la lectura del sensor de infrarrojos de una distancia menor que un umbral), la aplicación se conectará al servidor HTTPS predefinido y se bajará la nueva imagen (si se usa MQTT, la URL del servidor y el nombre de la nueva imagen se pueden comunicar en el mensaje; pero el certificado debería estar preinstalado).
 >- Se desarrollará una función de auto-diagnóstico (self-test) que permita decidir si la nueva imagen se comporta de forma correcta.
 >- Se utilizará la opción de rollback para indicar si la nueva imagen se elige para futuros arranques o se marca como inválida.
+
+
+
+<img src="images/configuracionEjercicio2.png" alt="drawing" style="width:40%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+<img src="images/configuracionWIFI_ejercicio2.png" alt="drawing" style="width:40%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+<img src="images/configurcionFlashSize_ejercicio2.png" alt="drawing" style="width:40%; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1%;
+    margin-botton: 1%;
+"/>
+
+
+
+
+```BASH
+I (680) main_task: Calling app_main()
+I (680) MAIN: Comenzando ejecución.
+
+
+I (680) MAIN: ******************************
+I (690) MAIN: *BIENVENIDOS A LA VERSIÓN 1.0*
+I (690) MAIN: ******************************
+
+
+I (700) MAIN: Motivo del reinicio (0): ESP_SLEEP_WAKEUP_UNDEFINED.
+I (700) MAIN: Comenzando el proceso de inicialización.
+I (740) pm: Frequency switching config: CPU_MAX: 240, APB_MAX: 240, APB_MIN: 10, Light sleep: ENABLED
+I (740) MAIN: El Power Manager ha sido configurado adecuadamente.
+I (750) MAIN: El timer de acceso al modo Deep Sleep ha sido configurado adecuadamente.
+I (760) MOCK_WIFI: Wifi Initialized
+I (5770) MOCK_WIFI: Wifi Connected
+I (5770) MAIN: WIFI CONNECTED
+I (5770) BUFFER: Buffer correctamente inicializado.
+I (5770) gpio: GPIO[25]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 
+I (5780) gpio: GPIO[32]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 
+I (5790) MONITOR-GPIO: GPIO Initialized
+I (5800) OTA_service: Servicio OTA Inicializado con éxito
+I (5800) MAIN: Proceso de inicialización finalizado con éxito.
+
+I (7860) MAIN: Temperatura: 24.740026
+I (7860) BUFFER: Dato correctamente almacenado
+I (7960) MAIN: Humedad: 35.652679
+I (7960) BUFFER: Dato correctamente almacenado
+I (8770) MOCK_WIFI: Wifi got IP
+I (8770) MAIN: WIFI GOT IP
+I (9860) MAIN: Temperatura: 24.707851
+I (9860) BUFFER: Dato leído correctamente.
+I (11960) MAIN: Humedad: 35.645050
+I (11960) MOCK_WIFI: Data '35.645050' sent successfully
+I (12770) MONITOR-GPIO: Botón GPIO 32 presionado
+W (12770) MAIN: Botón pulsado, comenzando OTA
+.
+.
+.
+I (17820) OTA_service: Starting Advanced OTA example
+I (17830) OTA_service: OTA started
+I (18550) OTA_service: Connected to server
+I (18550) esp_https_ota: Starting OTA...
+I (18550) esp_https_ota: Writing to partition subtype 16 at offset 0x110000
+I (18550) OTA_service: Reading Image Description
+I (18560) OTA_service: Running firmware version: 8c2ae0a-dirty
+I (18560) OTA_service: Verifying chip id of new image: 0
+I (28090) esp_image: segment 0: paddr=00110020 vaddr=3f400020 size=09198h ( 37272) map
+I (28100) esp_image: segment 1: paddr=001191c0 vaddr=3ffb0000 size=020f0h (  8432) 
+I (28110) esp_image: segment 2: paddr=0011b2b8 vaddr=40080000 size=04d60h ( 19808) 
+I (28120) esp_image: segment 3: paddr=00120020 vaddr=400d0020 size=13818h ( 79896) map
+I (28140) esp_image: segment 4: paddr=00133840 vaddr=40084d60 size=07284h ( 29316) 
+I (28160) esp_image: segment 0: paddr=00110020 vaddr=3f400020 size=09198h ( 37272) map
+I (28170) esp_image: segment 1: paddr=001191c0 vaddr=3ffb0000 size=020f0h (  8432) 
+I (28170) esp_image: segment 2: paddr=0011b2b8 vaddr=40080000 size=04d60h ( 19808) 
+I (28180) esp_image: segment 3: paddr=00120020 vaddr=400d0020 size=13818h ( 79896) map
+I (28200) esp_image: segment 4: paddr=00133840 vaddr=40084d60 size=07284h ( 29316) 
+I (28270) OTA_service: Boot partition updated. Next Partition: 16
+I (28270) OTA_service: OTA finish
+I (28270) OTA_service: ESP_HTTPS_OTA upgrade successful. Rebooting ...
+I (29270) wifi:state: run -> init (0)
+I (29270) wifi:pm stop, total sleep time: 918048 us / 12875232 us
+
+I (29270) wifi:<ba-del>idx:0, tid:0
+I (29270) wifi:new:<10,0>, old:<10,0>, ap:<255,255>, sta:<10,0>, prof:1
+E (29280) wifi:NAN WiFi stop
+I (29340) wifi:flush txq
+I (29340) wifi:stop sw txq
+I (29340) wifi:lmac stop hw txq
+I (29340) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+.
+.
+.
+
+I (386) main_task: Calling app_main()
+I (680) MAIN: Comenzando ejecución.
+
+
+I (680) MAIN: ******************************
+I (690) MAIN: *BIENVENIDOS A LA VERSIÓN 2.0*
+I (690) MAIN: ******************************
+.
+.
+.
+```

@@ -411,8 +411,8 @@ static void task_monitor_gpio_handler(void *handler_args, esp_event_base_t base,
         ESP_LOGW(TAG, "Botón pulsado, comenzando OTA");
         monitor_gpio_stop();
         TemperatureMonitor_stop();
-        //wifi_disconnect();
-        //aniot_console_start();
+        wifi_disconnect();
+        OTA_service_mainApp();
 
     }else{
         ESP_LOGE(TAG, "ERROR..: ID de evento desconocido");

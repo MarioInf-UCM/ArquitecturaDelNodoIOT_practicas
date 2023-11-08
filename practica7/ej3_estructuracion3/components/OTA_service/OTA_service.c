@@ -23,6 +23,7 @@
 #include "nvs_flash.h"
 #include "protocol_examples_common.h"
 #include "esp_netif.h"
+#include "esp_err.h"
 
 
 #if CONFIG_BOOTLOADER_APP_ANTI_ROLLBACK
@@ -37,15 +38,16 @@
 #include "ble_api.h"
 #endif
 
-static const char *TAG = "advanced_https_ota_example";
+static const char *TAG = "OTA_service";
 extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
+esp_err_t self_test(void);
+
 
 #define OTA_URL_SIZE 256
 
 /* Event handler for catching system events */
-static void event_handler(void* arg, esp_event_base_t event_base,
-                          int32_t event_id, void* event_data)
+static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
     if (event_base == ESP_HTTPS_OTA_EVENT) {
         switch (event_id) {
@@ -165,7 +167,7 @@ void advanced_ota_example_task(void *pvParameter)
     esp_https_ota_handle_t https_ota_handle = NULL;
     esp_err_t err = esp_https_ota_begin(&ota_config, &https_ota_handle);
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "ESP HTTPS OTA Begin failed");
+        ESP_LOGE(TAG, "ERROR (%s)..: ESP HTTPS OTA Begin failed", esp_err_to_name(err));
         vTaskDelete(NULL);
     }
 
@@ -219,7 +221,7 @@ ota_end:
 
 void OTA_service_mainApp(void)
 {
-    ESP_LOGI(TAG, "OTA example app_main start");
+    ESP_LOGI(TAG, "Comenzando proceso OTA");
     // Initialize NVS.
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -242,21 +244,28 @@ void OTA_service_mainApp(void)
     */
     ESP_ERROR_CHECK(example_connect());
 
+//Comprobción de la función self_check y ejecución del rollback
 #if defined(CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE)
     /**
      * We are treating successful WiFi connection as a checkpoint to cancel rollback
      * process and mark newly updated firmware image as active. For production cases,
      * please tune the checkpoint behavior per end application requirement.
      */
+    ESP_LOGI(TAG, "Comprobando integridad del nuevo firmware");
     const esp_partition_t *running = esp_ota_get_running_partition();
     esp_ota_img_states_t ota_state;
     if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
         if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
-            if (esp_ota_mark_app_valid_cancel_rollback() == ESP_OK) {
-                ESP_LOGI(TAG, "App is valid, rollback cancelled successfully");
+
+                esp_err_t checkStatus = self_test();
+            if (checkStatus == ESP_OK) {       //esp_ota_mark_app_valid_cancel_rollback() == ESP_OK
+                ESP_LOGI(TAG, "La aplicación es válida. Continuando con el proceso de actualización");
+                esp_ota_mark_app_valid_cancel_rollback();
             } else {
-                ESP_LOGE(TAG, "Failed to cancel rollback");
+                ESP_LOGE(TAG, "La aplicación es errónea. Procediendo al Rollback.");
+                esp_ota_mark_app_invalid_rollback_and_reboot();
             }
+
         }
     }
 #endif
@@ -308,6 +317,12 @@ esp_event_loop_handle_t OTA_service_init(void){
     return OTA_loop_gpio;
 }
 
-bool self_test(void){
-    return randbool = rand() & 1;
+esp_err_t self_test(void){
+
+    srand(time(0));
+    if((rand() & 1)? true : false){
+        return ESP_OK;
+    }else{
+        return ESP_FAIL;
+    }
 }
