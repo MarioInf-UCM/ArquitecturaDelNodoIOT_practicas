@@ -22,6 +22,8 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "protocol_examples_common.h"
+#include "esp_netif.h"
+
 
 #if CONFIG_BOOTLOADER_APP_ANTI_ROLLBACK
 #include "esp_efuse.h"
@@ -35,7 +37,7 @@
 #include "ble_api.h"
 #endif
 
-static const char *TAG = "OTA_service";
+static const char *TAG = "advanced_https_ota_example";
 extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
 
@@ -215,7 +217,7 @@ ota_end:
     vTaskDelete(NULL);
 }
 
-void app_main(void)
+void OTA_service_mainApp(void)
 {
     ESP_LOGI(TAG, "OTA example app_main start");
     // Initialize NVS.
@@ -280,4 +282,24 @@ void app_main(void)
 #endif
 
     xTaskCreate(&advanced_ota_example_task, "advanced_ota_example_task", 1024 * 8, NULL, 5, NULL);
+}
+
+
+
+//************************************************************************
+// FUNCIONES CREADAS PARA LA INTEGRACIÓN EN EL EJERCICIO DE ESTRUCTURACIÓN
+//************************************************************************
+esp_event_loop_handle_t OTA_service_init(void){
+
+    esp_event_loop_args_t loop_gpio_args = {
+        .queue_size = 5,
+        .task_name = "OTA_task",
+        .task_priority = uxTaskPriorityGet(NULL),
+        .task_stack_size = 3072,
+        .task_core_id = tskNO_AFFINITY};
+
+    ESP_ERROR_CHECK(esp_event_loop_create(&loop_gpio_args, &loop_gpio));
+
+    ESP_LOGI(TAG, "Servicio OTA Inicializado con éxito");
+    return loop_gpio;
 }

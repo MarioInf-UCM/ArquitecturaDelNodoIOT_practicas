@@ -167,7 +167,7 @@ En conclusión, una vez visto lo anterior podemos decir que la variable **server
 
 <br />
 
-## Tareas básicas sobre el cliente y el servidor OTA
+## Tareas básicas con cliente y el servidor OTA
 
 
 <br />
@@ -395,3 +395,16 @@ I (331) main_task: Started on CPU0
 I (341) main_task: Calling app_main()
 I (351) MAIN: THIS IS A NEW FIRMWARE VERSION -> HELLO WORLD :)
 ```
+
+
+
+<br />
+
+## Tareas avanzadas con cliente y servidor OTA
+
+>Tareas
+>
+>La aplicación inicial corresponderá con una aplicación similar a la de prácticas anteriores: una lectura periódica del sensor de temperatura. Se añadirá la siguiente funcionalidad:
+>- Cuando se reciba un evento externo (la pulsación de un botón o la lectura del sensor de infrarrojos de una distancia menor que un umbral), la aplicación se conectará al servidor HTTPS predefinido y se bajará la nueva imagen (si se usa MQTT, la URL del servidor y el nombre de la nueva imagen se pueden comunicar en el mensaje; pero el certificado debería estar preinstalado).
+>- Se desarrollará una función de auto-diagnóstico (self-test) que permita decidir si la nueva imagen se comporta de forma correcta.
+>- Se utilizará la opción de rollback para indicar si la nueva imagen se elige para futuros arranques o se marca como inválida.

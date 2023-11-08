@@ -13,6 +13,9 @@
 			"path": "ej2_helloWorld_toUpdate"
 		},
 		{
+			"path": "ej3_estructuracion3"
+		},
+		{
 			"path": "."
 		},
 		{
@@ -52,7 +55,8 @@
 			"esp_system.h": "c",
 			"stdio.h": "c",
 			"esp_check.h": "c",
-			"esp_crt_bundle.h": "c"
+			"esp_crt_bundle.h": "c",
+			"esp_ota_ops.h": "c"
 		}
 	}
 }
