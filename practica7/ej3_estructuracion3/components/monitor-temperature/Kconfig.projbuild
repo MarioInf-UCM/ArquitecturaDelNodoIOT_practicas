@@ -1,0 +1,10 @@
+menu "TEMPERATUREMONITOR Configuration"
+
+    config READ_PERIOD
+        int "Read period for temperature and humidity (s)"
+        range 1 60
+        default 2
+        help
+            Define el periodo de lectura, medido en segundos, con el que se obtienen datos desde el sensor Si7021.
+
+endmenu
