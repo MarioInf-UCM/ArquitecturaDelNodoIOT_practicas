@@ -70,7 +70,7 @@ static void gpio_timer_callback(void *arg)
     }
     if (gpio_get_level(OTA_BUTTON_GPIO_PORT)){
         ESP_LOGI(TAG, "Botón GPIO %d presionado", OTA_BUTTON_GPIO_PORT);
-        esp_event_post_to(loop_gpio, MONITOR_GPIO, MONITOR_GPIO_BUTTON_PRESSED, NULL, 0, portMAX_DELAY);
+        esp_event_post_to(loop_gpio, MONITOR_GPIO, MONITOR_OTA_GPIO_BUTTON_PRESSED, NULL, 0, portMAX_DELAY);
     }
 
 }

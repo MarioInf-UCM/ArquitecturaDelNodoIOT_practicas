@@ -22,7 +22,7 @@
 #include "OTA_service.h"
 
 static const char *TAG = "MAIN";
-#define TIME_TO_DEEP_SLEEP 30 * 1000000         // Espera de 1 minuto
+#define TIME_TO_DEEP_SLEEP 120 * 1000000         // Espera de 2 minuto
 //#define TIME_TO_DEEP_SLEEP 12 * 3600 * 1000000    // Espera de 12 horas
 
 
@@ -36,6 +36,7 @@ static void temperatureReaded_handler(void *registerArgs, esp_event_base_t baseE
 static void task_mock_wifi_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
 static void task_monitor_gpio_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
 static void task_console_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
+static void task_OTA_service_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
 static void deepSleep_event_handler();
 
 
@@ -243,7 +244,7 @@ void app_main(){
     // Inicialización del comoponentes OTA service - INICIO
     loop_console = OTA_service_init();
 
-    esp_event_handler_register_with(loop_console, OTA_SERVICE_EVENTS, OTA_SERVICE_FAIL_EVENT, task_console_handler, loop_console);
+    esp_event_handler_register_with(loop_console, OTA_SERVICE_EVENTS, OTA_SERVICE_FAIL_EVENT, task_OTA_service_handler, loop_console);
     if (result != ESP_OK){
         ESP_LOGE(TAG, "ERROR..: No se pudo registrar la manejadora del evento OTA_SERVICE_EVENTS - OTA_SERVICE_FAIL_EVENT.");
         vTaskDelete(NULL);
@@ -408,6 +409,10 @@ static void task_monitor_gpio_handler(void *handler_args, esp_event_base_t base,
 
     }else if(id == MONITOR_OTA_GPIO_BUTTON_PRESSED){
         ESP_LOGW(TAG, "Botón pulsado, comenzando OTA");
+        monitor_gpio_stop();
+        TemperatureMonitor_stop();
+        //wifi_disconnect();
+        //aniot_console_start();
 
     }else{
         ESP_LOGE(TAG, "ERROR..: ID de evento desconocido");
@@ -446,7 +451,7 @@ static void task_console_handler(void *handler_args, esp_event_base_t base, int3
 
 
 
-static void OTA_service_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+static void task_OTA_service_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
 
     if (base != OTA_SERVICE_EVENTS)

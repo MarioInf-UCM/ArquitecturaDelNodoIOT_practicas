@@ -289,6 +289,10 @@ void OTA_service_mainApp(void)
 //************************************************************************
 // FUNCIONES CREADAS PARA LA INTEGRACIÓN EN EL EJERCICIO DE ESTRUCTURACIÓN
 //************************************************************************
+
+esp_event_loop_handle_t OTA_loop_gpio;
+ESP_EVENT_DEFINE_BASE(OTA_SERVICE_EVENTS);
+
 esp_event_loop_handle_t OTA_service_init(void){
 
     esp_event_loop_args_t loop_gpio_args = {
@@ -298,8 +302,12 @@ esp_event_loop_handle_t OTA_service_init(void){
         .task_stack_size = 3072,
         .task_core_id = tskNO_AFFINITY};
 
-    ESP_ERROR_CHECK(esp_event_loop_create(&loop_gpio_args, &loop_gpio));
+    ESP_ERROR_CHECK(esp_event_loop_create(&loop_gpio_args, &OTA_loop_gpio));
 
     ESP_LOGI(TAG, "Servicio OTA Inicializado con éxito");
-    return loop_gpio;
+    return OTA_loop_gpio;
+}
+
+bool self_test(void){
+    return randbool = rand() & 1;
 }

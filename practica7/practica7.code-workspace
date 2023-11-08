@@ -56,7 +56,8 @@
 			"stdio.h": "c",
 			"esp_check.h": "c",
 			"esp_crt_bundle.h": "c",
-			"esp_ota_ops.h": "c"
+			"esp_ota_ops.h": "c",
+			"esp_netif.h": "c"
 		}
 	}
 }
